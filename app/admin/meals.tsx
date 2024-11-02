@@ -31,7 +31,7 @@ export default function ManageMeals() {
         .upload(`meals/${Date.now()}_${imageFile.name}`, imageFile);
 
       if (uploadError) {
-        console.error('Error uploading image', uploadError);
+        console.error('Error uploading image', uploadError); 
         return;
       }
 

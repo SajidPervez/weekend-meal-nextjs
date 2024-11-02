@@ -296,7 +296,7 @@ export default function AdminMeals() {
                       ...meal,
                       price: meal.price.toString(),
                       available_quantity: meal.available_quantity.toString(),
-                      description: meal.description || '', // Ensure description is a string
+                      description: meal.description || '', // Ensure description is a string  
                       additional_images: meal.additional_images || [],
                     });
                   }}
