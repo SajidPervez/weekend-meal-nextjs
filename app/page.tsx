@@ -2,9 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Facebook, Instagram, Utensils } from "lucide-react"
-import Image from "next/image"  
 import Link from "next/link"
 import { supabase } from '@/lib/supabase';
 import type { Meal } from '@/types';    
@@ -74,7 +72,7 @@ export default function HomePage() {
                 Delicious Meals, Delivered to You
               </h1>
               <p className="max-w-[600px] text-gray-700 md:text-xl mb-6">
-                Discover our chef's special: Chicken Biryani
+                Discover our chef&apos;s special: Chicken Biryani
               </p>
               <div className="flex flex-col gap-2 min-[400px]:flex-row">
                 <Button size="lg">Order Now</Button>

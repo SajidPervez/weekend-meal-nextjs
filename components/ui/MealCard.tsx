@@ -3,12 +3,15 @@
 
 import { Meal } from "@/types/meal";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 interface MealCardProps {
   meal: Meal;
+  onEdit?: () => void;
+  onDelete?: () => void;
 }
 
-export default function MealCard({ meal }: MealCardProps) {
+export default function MealCard({ meal, onEdit, onDelete }: MealCardProps) {
   const router = useRouter();
 
   const handleBookNow = () => {
@@ -18,11 +21,16 @@ export default function MealCard({ meal }: MealCardProps) {
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden">
       {meal.main_image_url && (
-        <img 
-          src={meal.main_image_url} 
-          alt={meal.title}
-          className="w-full h-48 object-cover"
-        />
+        <div className="relative w-full h-48">
+          <Image 
+            src={meal.main_image_url}
+            alt={meal.title}
+            fill
+            className="object-cover"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            priority
+          />
+        </div>
       )}
       <div className="p-4">
         <h3 className="text-xl font-semibold mb-2">{meal.title}</h3>
@@ -33,13 +41,30 @@ export default function MealCard({ meal }: MealCardProps) {
           <p>Pick-up: {meal.time_available}</p>
           {meal.size && <p>Size: {meal.size}</p>}
         </div>
-        <button
-          onClick={handleBookNow}
-          className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 transition-colors"
-          disabled={meal.available_quantity <= 0}
-        >
-          {meal.available_quantity > 0 ? 'Book Now' : 'Sold Out'}
-        </button>
+        {onEdit && onDelete ? (
+          <div className="space-x-2">
+            <button
+              onClick={onEdit}
+              className="bg-yellow-500 text-white px-2 py-1 rounded hover:bg-yellow-600"
+            >
+              Edit
+            </button>
+            <button
+              onClick={onDelete}
+              className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
+            >
+              Delete
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={handleBookNow}
+            className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 transition-colors"
+            disabled={meal.available_quantity <= 0}
+          >
+            {meal.available_quantity > 0 ? 'Book Now' : 'Sold Out'}
+          </button>
+        )}
       </div>
     </div>
   );

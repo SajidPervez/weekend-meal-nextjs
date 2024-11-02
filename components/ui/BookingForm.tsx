@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Meal } from "@/types/meal";
 import { supabase } from "@/lib/supabase";
-import { PostgrestError } from '@supabase/supabase-js';
+import { AuthError } from '@supabase/supabase-js';
 
 interface BookingFormProps {
   meal: Meal;
@@ -55,7 +55,7 @@ export default function BookingForm({ meal }: BookingFormProps) {
       });
 
       // Start a Supabase transaction
-      const { data, error: transactionError } = await supabase.rpc('create_order', {
+      const { error: transactionError } = await supabase.rpc('create_order', {
         p_user_id: user?.id || null,
         p_total_amount: totalAmount,
         p_customer_email: email || null,
@@ -78,15 +78,18 @@ export default function BookingForm({ meal }: BookingFormProps) {
       setQuantity(1);
       setEmail('');
       setPhone('');
-    } catch (err: any) {
-      console.error('Error in handleSubmit:', err);
-      setError(err.message || 'An error occurred while processing your order');
+    } catch (error: unknown) {
+      console.error('Error in handleSubmit:', error);
+      if (error instanceof Error) {
+        setError(error.message);
+      } else {
+        setError('An error occurred while processing your order');
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  // Rest of your component remains the same...
   if (success) {
     return (
       <div className="bg-green-50 border border-green-500 rounded p-4 text-green-700">

@@ -2,6 +2,7 @@
 
 import { useParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { supabase } from '@/lib/supabase';
 import type { Meal } from '@/types/meal';
 import BookingForm from '@/components/ui/BookingForm';
@@ -50,11 +51,15 @@ export default function BookingPage() {
                 {/* Meal Details Section */}
                 <div className="bg-white rounded-lg shadow-md overflow-hidden">
                     {meal.main_image_url && (
-                        <img 
-                            src={meal.main_image_url} 
-                            alt={meal.title}
-                            className="w-full h-64 object-cover"
-                        />
+                        <div className="relative w-full h-64">
+                            <Image 
+                                src={meal.main_image_url}
+                                alt={meal.title}
+                                fill
+                                className="object-cover"
+                                sizes="(max-width: 768px) 100vw, 50vw"
+                            />
+                        </div>
                     )}
                     <div className="p-6">
                         <h2 className="text-xl font-bold mb-2">{meal.title}</h2>

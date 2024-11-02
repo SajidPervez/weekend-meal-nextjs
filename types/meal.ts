@@ -1,23 +1,18 @@
 import { uuid } from 'uuid';
 
 export interface Meal {
-  id: uuid;
+  id: string;
   title: string;
-  description: string | null;
+  description: string;
   main_image_url: string | null;
-  additional_images: string[] | null;
+  additional_images?: string[];
   price: number;
   available_quantity: number;
   date_available: string;
-  created_at?: string;
   time_available: 'lunch' | 'dinner';
   size: string;
-  available_for: string[];
-  availability_date: string | null;
-  recurring_pattern: {
-    type: 'none' | 'weekly' | 'specific_day';
-    days: string[];
-  } | null;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export type MealFormData = {

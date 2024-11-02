@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { AuthError } from '@supabase/supabase-js';
 
 export default function SignUpPage() {
   const [email, setEmail] = useState('');
@@ -29,8 +30,12 @@ export default function SignUpPage() {
         // Redirect to login page with success message
         router.push('/login?message=Check your email to confirm your account');
       }
-    } catch (error: any) {
-      setError(error.message);
+    } catch (error: unknown) {
+      if (error instanceof AuthError) {
+        setError(error.message);
+      } else {
+        setError('An unexpected error occurred during sign up');
+      }
     } finally {
       setLoading(false);
     }
