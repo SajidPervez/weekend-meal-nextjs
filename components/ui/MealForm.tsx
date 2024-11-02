@@ -1,6 +1,5 @@
 // components/MealForm.tsx
 import React, { useState } from 'react';
-import { Meal } from '@/types/meal';
 
 interface MealFormData {
   title: string;

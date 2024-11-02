@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Meal } from "@/types/meal";
 import { supabase } from "@/lib/supabase";
-import { AuthError } from '@supabase/supabase-js';
 
 interface BookingFormProps {
   meal: Meal;
