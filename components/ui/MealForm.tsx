@@ -1,35 +1,36 @@
 // components/MealForm.tsx
 import React, { useState } from 'react';
-
-interface MealFormData {
-  title: string;
-  description: string;
-  price: number;
-  available_quantity?: number;
-  date_available?: string;
-  time_available?: 'lunch' | 'dinner';
-  size?: string;
-}
+import { Meal, MealFormData } from '@/types/meal';
 
 interface MealFormProps {
-  initialMeal?: Meal | null;
-  onSubmit: (mealData: Partial<Meal>, imageFile: File | null) => Promise<void>;
+  initialMeal: MealFormData | null;
+  onSubmit: (mealData: Partial<MealFormData>, imageFile: File | null) => Promise<void>;
 }
 
 const MealForm: React.FC<MealFormProps> = ({ initialMeal, onSubmit }) => {
   const [mealData, setMealData] = useState<MealFormData>({
     title: initialMeal?.title || '',
     description: initialMeal?.description || '',
-    price: initialMeal?.price || 0,
-    available_quantity: initialMeal?.available_quantity,
-    date_available: initialMeal?.date_available,
-    time_available: initialMeal?.time_available,
-    size: initialMeal?.size,
+    main_image_url: initialMeal?.main_image_url || '',
+    additional_images: initialMeal?.additional_images || [],
+    price: initialMeal?.price || '',
+    available_quantity: initialMeal?.available_quantity || '0',
+    date_available: initialMeal?.date_available || new Date().toISOString().split('T')[0],
+    time_available: initialMeal?.time_available || 'lunch',
+    size: initialMeal?.size || '',
+    available_for: initialMeal?.available_for || [],
+    availability_date: initialMeal?.availability_date || '',
+    recurring_pattern: initialMeal?.recurring_pattern || {
+      type: 'none',
+      days: [],
+    },
   });
   const [imageFile, setImageFile] = useState<File | null>(null);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const value = e.target.type === 'number' ? parseFloat(e.target.value) : e.target.value;
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
+    const value = e.target.type === 'number' ? e.target.value : e.target.value;
     setMealData({ ...mealData, [e.target.name]: value });
   };
 

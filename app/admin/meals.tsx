@@ -4,11 +4,11 @@ import { useState, useEffect } from 'react';
 import MealCard from '@/components/ui/MealCard';
 import MealForm from '@/components/ui/MealForm';
 import { supabase } from '@/lib/supabase';
-import { Meal } from '@/types/meal';
+import { Meal, MealFormData } from '@/types/meal';
 
 export default function ManageMeals() {
   const [meals, setMeals] = useState<Meal[]>([]);
-  const [editingMeal, setEditingMeal] = useState<Meal | null>(null);
+  const [editingMeal, setEditingMeal] = useState<MealFormData | null>(null);
 
   useEffect(() => {
     fetchMeals();
@@ -22,7 +22,7 @@ export default function ManageMeals() {
     else setMeals(data || []);
   };
 
-  const handleMealSubmit = async (mealData: Partial<Meal>, imageFile: File | null) => {
+  const handleMealSubmit = async (mealData: Partial<MealFormData>, imageFile: File | null) => {
     let imagePath = null;
 
     if (imageFile) {
@@ -73,7 +73,21 @@ export default function ManageMeals() {
   };
 
   const handleEdit = (meal: Meal) => {
-    setEditingMeal(meal);
+    const formData: MealFormData = {
+      title: meal.title,
+      description: meal.description || '',
+      main_image_url: meal.main_image_url || '',
+      additional_images: meal.additional_images || [],
+      price: meal.price.toString(),
+      available_quantity: meal.available_quantity.toString(),
+      date_available: meal.date_available,
+      time_available: meal.time_available,
+      size: meal.size,
+      available_for: meal.available_for,
+      availability_date: meal.availability_date || '',
+      recurring_pattern: meal.recurring_pattern,
+    };
+    setEditingMeal(formData);
   };
 
   return (
