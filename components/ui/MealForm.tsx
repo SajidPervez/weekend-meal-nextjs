@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Meal, MealFormData } from '@/types/meal';
 
 interface MealFormProps {
-  initialMeal?: Partial<MealFormData>;
+  initialMeal?: Partial<MealFormData> | null;
   onSubmit: (mealData: Partial<MealFormData>, imageFile: File | null) => Promise<void>;
 }
 
