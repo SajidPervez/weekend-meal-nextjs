@@ -8,7 +8,7 @@ import { Meal, MealFormData } from '@/types/meal';
 
 export default function ManageMeals() {
   const [meals, setMeals] = useState<Meal[]>([]);
-  const [editingMeal, setEditingMeal] = useState<Partial<MealFormData> | undefined>(undefined);
+  const [editingMeal, setEditingMeal] = useState<Partial<MealFormData> | null>(null);
 
   useEffect(() => {
     fetchMeals();
@@ -60,7 +60,7 @@ export default function ManageMeals() {
       if (error) console.error('Error creating meal', error);
     }
 
-    setEditingMeal(undefined);
+    setEditingMeal(null);
     fetchMeals();
   };
 
