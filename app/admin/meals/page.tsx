@@ -5,6 +5,10 @@ import AdminLayout from "@/components/AdminLayout";
 import { supabase } from "@/lib/supabase";
 import type { Meal, MealFormData } from "@/types/meal";
 
+const getTodayDate = () => {
+  return new Date().toISOString().split('T')[0];
+};
+
 export default function AdminMeals() {
   const [meals, setMeals] = useState<Meal[]>([]);
   const [editingMeal, setEditingMeal] = useState<Meal | null>(null);
@@ -26,10 +30,6 @@ export default function AdminMeals() {
       days: [],
     },
   });
-
-  const getTodayDate = () => {
-    return new Date().toISOString().split('T')[0];
-  };
 
   useEffect(() => {
     fetchMeals();
@@ -316,20 +316,27 @@ export default function AdminMeals() {
               <div className="space-x-2 mt-2">
                 <button
                   onClick={() => {
-                    setEditingMeal(meal);
-                    setFormData({
-                      ...meal,
-                      price: meal.price.toString(),
-                      available_quantity: meal.available_quantity.toString(),
-                      description: meal.description || '',
-                      additional_images: meal.additional_images || [],
-                      available_for: meal.available_for || [],
-                      availability_date: meal.availability_date || '',
-                      recurring_pattern: meal.recurring_pattern || {
-                        type: "none",
-                        days: [],
-                      },
-                    });
+                    if (meal) {
+                      setEditingMeal(meal);
+                      const formData: MealFormData = {
+                        title: meal.title,
+                        description: meal.description || '',
+                        main_image_url: meal.main_image_url || '',
+                        additional_images: meal.additional_images || [],
+                        price: meal.price.toString(),
+                        available_quantity: meal.available_quantity.toString(),
+                        date_available: meal.date_available,
+                        time_available: meal.time_available,
+                        size: meal.size,
+                        available_for: meal.available_for || [],
+                        availability_date: meal.availability_date || '',
+                        recurring_pattern: meal.recurring_pattern || {
+                          type: 'none',
+                          days: [],
+                        },
+                      };
+                      setFormData(formData);
+                    }
                   }}
                   className="bg-yellow-500 text-white px-2 py-1 rounded"
                 >
