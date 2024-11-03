@@ -1,6 +1,6 @@
 // components/MealForm.tsx
 import React, { useState } from 'react';
-import { Meal, MealFormData } from '@/types/meal';
+import { MealFormData } from '@/types/meal';
 
 interface MealFormProps {
   initialMeal?: Partial<MealFormData> | null;

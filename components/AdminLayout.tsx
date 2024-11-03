@@ -22,8 +22,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     });
 
     return () => {
-      if (authListener && authListener.unsubscribe) {
-        authListener.unsubscribe();
+      if (authListener && authListener.subscription) {
+        authListener.subscription.unsubscribe();
       }
     };
   }, []);

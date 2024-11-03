@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Facebook, Instagram, Utensils } from "lucide-react"
 import Link from "next/link"
 import { supabase } from '@/lib/supabase';
-import type { Meal } from '@/types';    
+import type { Meal } from '@/types/meal';
 import MealCard from '@/components/ui/MealCard';
 
 export default function HomePage() {
