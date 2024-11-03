@@ -16,7 +16,7 @@ export default function AdminMeals() {
     additional_images: [],
     price: "",
     available_quantity: "0",
-    date_available: getTodayDate(), // Set initial date to today
+    date_available: getTodayDate(),
     time_available: "lunch",
     size: "500ml",
     available_for: [],
@@ -27,7 +27,6 @@ export default function AdminMeals() {
     },
   });
 
-  // Add a function to get today's date in YYYY-MM-DD format
   const getTodayDate = () => {
     return new Date().toISOString().split('T')[0];
   };
@@ -118,7 +117,7 @@ export default function AdminMeals() {
         additional_images: [],
         price: "",
         available_quantity: "0",
-        date_available: getTodayDate(), // Set initial date to today
+        date_available: getTodayDate(),
         time_available: "lunch",
         size: "500ml",
         available_for: [],
@@ -296,8 +295,14 @@ export default function AdminMeals() {
                       ...meal,
                       price: meal.price.toString(),
                       available_quantity: meal.available_quantity.toString(),
-                      description: meal.description || '', // Ensure description is a string  
+                      description: meal.description || '',
                       additional_images: meal.additional_images || [],
+                      available_for: meal.available_for || [],
+                      availability_date: meal.availability_date || '',
+                      recurring_pattern: meal.recurring_pattern || {
+                        type: "none",
+                        days: [],
+                      },
                     });
                   }}
                   className="bg-yellow-500 text-white px-2 py-1 rounded"
