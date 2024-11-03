@@ -213,14 +213,40 @@ export default function AdminMeals() {
           </div>
 
           <div>
+            <label className="block">Available For:</label>
+            <div className="space-x-4">
+              <label className="inline-flex items-center">
+                <input
+                  type="checkbox"
+                  checked={formData.available_for.includes('lunch')}
+                  onChange={(e) => handleAvailableForChange('lunch', e.target.checked)}
+                  className="mr-2"
+                />
+                Lunch
+              </label>
+              <label className="inline-flex items-center">
+                <input
+                  type="checkbox"
+                  checked={formData.available_for.includes('dinner')}
+                  onChange={(e) => handleAvailableForChange('dinner', e.target.checked)}
+                  className="mr-2"
+                />
+                Dinner
+              </label>
+            </div>
+          </div>
+
+          <div>
             <label className="block">Size:</label>
-            <input
-              type="text"
+            <select
               value={formData.size}
-              onChange={(e) => setFormData({...formData, size: e.target.value})}
+              onChange={(e) => handleSizeChange(e.target.value)}
               className="border p-2 w-full"
-              placeholder="e.g., 500ml"
-            />
+            >
+              <option value="small">Small</option>
+              <option value="medium">Medium</option>
+              <option value="large">Large</option>
+            </select>
           </div>
 
           <div>
