@@ -8,7 +8,7 @@ import { Meal, MealFormData } from '@/types/meal';
 
 export default function ManageMeals() {
   const [meals, setMeals] = useState<Meal[]>([]);
-  const [editingMeal, setEditingMeal] = useState<MealFormData | null>(null);
+  const [editingMeal, setEditingMeal] = useState<Partial<MealFormData> | undefined>(undefined);
 
   useEffect(() => {
     fetchMeals();
@@ -41,13 +41,15 @@ export default function ManageMeals() {
     const mealPayload = {
       ...mealData,
       main_image_url: imagePath || editingMeal?.main_image_url,
+      price: mealData.price ? parseFloat(mealData.price) : 0,
+      available_quantity: mealData.available_quantity ? parseInt(mealData.available_quantity) : 0,
     };
 
     if (editingMeal) {
       const { error } = await supabase
         .from('meals')
         .update(mealPayload)
-        .eq('id', editingMeal.id);
+        .eq('id', (meals.find(m => m.title === editingMeal.title))?.id);
 
       if (error) console.error('Error updating meal', error);
     } else {
@@ -58,7 +60,7 @@ export default function ManageMeals() {
       if (error) console.error('Error creating meal', error);
     }
 
-    setEditingMeal(null);
+    setEditingMeal(undefined);
     fetchMeals();
   };
 
@@ -73,7 +75,7 @@ export default function ManageMeals() {
   };
 
   const handleEdit = (meal: Meal) => {
-    const formData: MealFormData = {
+    const formData: Partial<MealFormData> = {
       title: meal.title,
       description: meal.description || '',
       main_image_url: meal.main_image_url || '',
