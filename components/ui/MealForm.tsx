@@ -12,8 +12,8 @@ interface MealFormData {
 }
 
 interface MealFormProps {
-  initialMeal?: Partial<MealFormData>;
-  onSubmit: (mealData: MealFormData, imageFile: File | null) => void;
+  initialMeal?: Meal | null;
+  onSubmit: (mealData: Partial<Meal>, imageFile: File | null) => Promise<void>;
 }
 
 const MealForm: React.FC<MealFormProps> = ({ initialMeal, onSubmit }) => {
