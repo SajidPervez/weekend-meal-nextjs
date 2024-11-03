@@ -1,5 +1,3 @@
-import { uuid } from 'uuid';
-
 export interface Meal {
   id: string;
   title: string;

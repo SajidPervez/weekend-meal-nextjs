@@ -316,27 +316,25 @@ export default function AdminMeals() {
               <div className="space-x-2 mt-2">
                 <button
                   onClick={() => {
-                    if (meal) {
-                      setEditingMeal(meal);
-                      const formData: MealFormData = {
-                        title: meal.title,
-                        description: meal.description || '',
-                        main_image_url: meal.main_image_url || '',
-                        additional_images: meal.additional_images || [],
-                        price: meal.price.toString(),
-                        available_quantity: meal.available_quantity.toString(),
-                        date_available: meal.date_available,
-                        time_available: meal.time_available,
-                        size: meal.size,
-                        available_for: meal.available_for || [],
-                        availability_date: meal.availability_date || '',
-                        recurring_pattern: meal.recurring_pattern || {
-                          type: 'none',
-                          days: [],
-                        },
-                      };
-                      setFormData(formData);
-                    }
+                    setEditingMeal(meal);
+                    const formData: MealFormData = {
+                      title: meal.title,
+                      description: meal.description || '',
+                      main_image_url: meal.main_image_url || '',
+                      additional_images: meal.additional_images || [],
+                      price: meal.price.toString(),
+                      available_quantity: meal.available_quantity.toString(),
+                      date_available: meal.date_available,
+                      time_available: meal.time_available,
+                      size: meal.size,
+                      available_for: meal.available_for || [],
+                      availability_date: meal.availability_date || '',
+                      recurring_pattern: {
+                        type: meal.recurring_pattern?.type || 'none',
+                        days: meal.recurring_pattern?.days || [],
+                      },
+                    };
+                    setFormData(formData);
                   }}
                   className="bg-yellow-500 text-white px-2 py-1 rounded"
                 >
