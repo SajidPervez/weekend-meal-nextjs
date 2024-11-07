@@ -27,7 +27,11 @@ function LoginContent() {
       });
 
       if (error) {
-        setErrorMessage(error.message);
+        if (error.message === 'Invalid login credentials') {
+          setErrorMessage('The email or password you entered is incorrect. Please try again.');
+        } else {
+          setErrorMessage(error.message);
+        }
         return;
       }
 
