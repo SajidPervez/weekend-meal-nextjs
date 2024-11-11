@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import MealForm from '@/components/ui/MealForm';
 import { supabase } from '@/lib/supabase';
