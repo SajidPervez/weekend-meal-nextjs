@@ -1,12 +1,13 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 import MealForm from '@/components/ui/MealForm';
 import { supabase } from '@/lib/supabase';
 import { MealFormData } from '@/types/meal';
 import AdminLayout from '@/components/AdminLayout';
 
-export default function AddMeal() {
+function AddMealContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const editId = searchParams.get('edit');
@@ -50,16 +51,13 @@ export default function AddMeal() {
         main_image_url: imageUrl || null,
         price: parseFloat(mealData.price?.toString() || '0'),
         available_quantity: parseInt(mealData.available_quantity?.toString() || '0'),
-        // Ensure date is in YYYY-MM-DD format
         date_available: new Date(mealData.date_available).toISOString().split('T')[0],
         time_available: mealData.time_available,
         size: mealData.size || null,
         available_for: mealData.available_for ? JSON.parse(mealData.available_for) : ['lunch'],
-        // Only include availability_date if it's a valid date
         availability_date: mealData.availability_date 
           ? new Date(mealData.availability_date).toISOString().split('T')[0]
           : null,
-        // Parse recurring pattern from string to object
         recurring_pattern: mealData.recurring_pattern 
           ? JSON.parse(mealData.recurring_pattern)
           : { type: 'none', days: [] },
@@ -86,7 +84,6 @@ export default function AddMeal() {
         }
       }
 
-      // After successful submission, redirect to dashboard
       router.push('/admin');
     } catch (error) {
       console.error('Error handling meal submission:', error);
@@ -106,5 +103,13 @@ export default function AddMeal() {
         />
       </div>
     </AdminLayout>
+  );
+}
+
+export default function AddMeal() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <AddMealContent />
+    </Suspense>
   );
 }
