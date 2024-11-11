@@ -20,19 +20,16 @@ export interface Meal {
 }
 
 export interface MealFormData {
+  id?: string;
   title: string;
-  description: string;
-  main_image_url: string;
-  additional_images: string[];
-  price: string;
-  available_quantity: string;
+  description: string | null;
+  main_image_url: string | null;
+  price: string | number;
+  available_quantity: string | number;
   date_available: string;
-  time_available: 'lunch' | 'dinner';
-  size: string;
-  available_for: ('lunch' | 'dinner')[];
-  availability_date: string;
-  recurring_pattern: {
-    type: 'none' | 'weekly' | 'monthly';
-    days: string[];
-  };
+  time_available: string;
+  size: string | null;
+  available_for: string | null;
+  availability_date: string | null;
+  recurring_pattern: string | null;
 }

@@ -7,9 +7,13 @@ import { supabase } from '@/lib/supabase';
 import { Meal, MealFormData } from '@/types/meal';
 import AdminLayout from '@/components/AdminLayout';
 
+interface EditingMeal extends Partial<MealFormData> {
+  id?: string;
+}
+
 export default function AdminMeals() {
   const [meals, setMeals] = useState<Meal[]>([]);
-  const [editingMeal, setEditingMeal] = useState<Partial<MealFormData> | null>(null);
+  const [editingMeal, setEditingMeal] = useState<EditingMeal | null>(null);
 
   useEffect(() => {
     fetchMeals();
@@ -57,16 +61,16 @@ export default function AdminMeals() {
 
       const mealPayload = {
         title: mealData.title,
-        description: mealData.description,
-        main_image_url: imageUrl || editingMeal?.main_image_url,
+        description: mealData.description || null,
+        main_image_url: imageUrl || editingMeal?.main_image_url || null,
         price: parseFloat(mealData.price?.toString() || '0'),
         available_quantity: parseInt(mealData.available_quantity?.toString() || '0'),
         date_available: mealData.date_available,
         time_available: mealData.time_available,
-        size: mealData.size,
-        available_for: mealData.available_for,
-        availability_date: mealData.availability_date,
-        recurring_pattern: mealData.recurring_pattern,
+        size: mealData.size || null,
+        available_for: mealData.available_for || null,
+        availability_date: mealData.availability_date || null,
+        recurring_pattern: mealData.recurring_pattern || null,
       };
 
       if (editingMeal?.id) {
