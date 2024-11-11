@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import MealForm from '@/components/ui/MealForm';
 import { supabase } from '@/lib/supabase';
 import { MealFormData } from '@/types/meal';
@@ -11,9 +11,31 @@ function AddMealContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const editId = searchParams.get('edit');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    checkAuth();
+  }, []);
+
+  const checkAuth = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      router.push('/login');
+      return;
+    }
+    setIsAuthenticated(true);
+  };
 
   const handleMealSubmit = async (mealData: Partial<MealFormData>, imageFile: File | null) => {
     try {
+      // Check if user is authenticated
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        console.error('User not authenticated');
+        router.push('/login');
+        return;
+      }
+
       let imageUrl = null;
 
       if (imageFile) {
@@ -92,6 +114,10 @@ function AddMealContent() {
       console.error('Error handling meal submission:', error);
     }
   };
+
+  if (!isAuthenticated) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <AdminLayout>
