@@ -18,79 +18,121 @@ export default function AdminMeals() {
   const fetchMeals = async () => {
     const { data, error } = await supabase
       .from('meals')
-      .select('*');
-    if (error) console.error('Error fetching meals', error);
-    else setMeals(data || []);
+      .select('*')
+      .order('created_at', { ascending: false });
+      
+    if (error) {
+      console.error('Error fetching meals:', error);
+    } else {
+      setMeals(data || []);
+    }
   };
 
   const handleMealSubmit = async (mealData: Partial<MealFormData>, imageFile: File | null) => {
-    let imagePath = null;
+    try {
+      let imageUrl = null;
 
-    if (imageFile) {
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('meal-images')
-        .upload(`meals/${Date.now()}_${imageFile.name}`, imageFile);
+      if (imageFile) {
+        // Upload image to Supabase storage
+        const fileExt = imageFile.name.split('.').pop();
+        const fileName = `${Date.now()}.${fileExt}`;
+        const filePath = `meals/${fileName}`;
 
-      if (uploadError) {
-        console.error('Error uploading image', uploadError); 
-        return;
+        const { error: uploadError } = await supabase.storage
+          .from('meal-images')
+          .upload(filePath, imageFile);
+
+        if (uploadError) {
+          console.error('Error uploading image:', uploadError);
+          return;
+        }
+
+        // Get the public URL for the uploaded image
+        const { data } = supabase.storage
+          .from('meal-images')
+          .getPublicUrl(filePath);
+
+        imageUrl = data.publicUrl;
       }
 
-      imagePath = uploadData?.path;
+      const mealPayload = {
+        title: mealData.title,
+        description: mealData.description,
+        main_image_url: imageUrl || editingMeal?.main_image_url,
+        price: parseFloat(mealData.price?.toString() || '0'),
+        available_quantity: parseInt(mealData.available_quantity?.toString() || '0'),
+        date_available: mealData.date_available,
+        time_available: mealData.time_available,
+        size: mealData.size,
+        available_for: mealData.available_for,
+        availability_date: mealData.availability_date,
+        recurring_pattern: mealData.recurring_pattern,
+      };
+
+      if (editingMeal?.id) {
+        // Update existing meal
+        const { error: updateError } = await supabase
+          .from('meals')
+          .update(mealPayload)
+          .eq('id', editingMeal.id);
+
+        if (updateError) {
+          console.error('Error updating meal:', updateError);
+          return;
+        }
+      } else {
+        // Create new meal
+        const { error: insertError } = await supabase
+          .from('meals')
+          .insert([mealPayload]);
+
+        if (insertError) {
+          console.error('Error creating meal:', insertError);
+          return;
+        }
+      }
+
+      // Reset form and refresh meals
+      setEditingMeal(null);
+      await fetchMeals();
+    } catch (error) {
+      console.error('Error handling meal submission:', error);
     }
-
-    const mealPayload = {
-      ...mealData,
-      main_image_url: imagePath || editingMeal?.main_image_url,
-      price: mealData.price ? parseFloat(mealData.price) : 0,
-      available_quantity: mealData.available_quantity ? parseInt(mealData.available_quantity) : 0,
-    };
-
-    if (editingMeal) {
-      const { error } = await supabase
-        .from('meals')
-        .update(mealPayload)
-        .eq('id', (meals.find(m => m.title === editingMeal.title))?.id);
-
-      if (error) console.error('Error updating meal', error);
-    } else {
-      const { error } = await supabase
-        .from('meals')
-        .insert([mealPayload]);
-
-      if (error) console.error('Error creating meal', error);
-    }
-
-    setEditingMeal(null);
-    fetchMeals();
   };
 
   const handleDelete = async (mealId: string) => {
-    const { error } = await supabase
-      .from('meals')
-      .delete()
-      .eq('id', mealId);
+    try {
+      const { error } = await supabase
+        .from('meals')
+        .delete()
+        .eq('id', mealId);
 
-    if (error) console.error('Error deleting meal', error);
-    else fetchMeals();
+      if (error) {
+        console.error('Error deleting meal:', error);
+        return;
+      }
+
+      await fetchMeals();
+    } catch (error) {
+      console.error('Error handling meal deletion:', error);
+    }
   };
 
   const handleEdit = (meal: Meal) => {
-    const formData: Partial<MealFormData> = {
+    setEditingMeal({
+      id: meal.id,
       title: meal.title,
-      description: meal.description || '',
-      main_image_url: meal.main_image_url || '',
-      additional_images: meal.additional_images || [],
+      description: meal.description,
+      main_image_url: meal.main_image_url,
       price: meal.price.toString(),
       available_quantity: meal.available_quantity.toString(),
       date_available: meal.date_available,
       time_available: meal.time_available,
       size: meal.size,
       available_for: meal.available_for,
-      availability_date: meal.availability_date || '',
+      availability_date: meal.availability_date,
       recurring_pattern: meal.recurring_pattern,
-    };
-    setEditingMeal(formData);
+    });
   };
 
   return (
@@ -103,7 +145,7 @@ export default function AdminMeals() {
           onSubmit={handleMealSubmit} 
         />
 
-        <div className="mt-8">
+        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {meals.map((meal) => (
             <MealCard 
               key={meal.id} 
