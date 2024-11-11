@@ -9,12 +9,15 @@ function LoginContent() {
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get('redirectTo') || '/admin';
   const [errorMessage, setErrorMessage] = useState<string>('');
+  const [successMessage, setSuccessMessage] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSignIn = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    e.stopPropagation();
     setIsLoading(true);
     setErrorMessage('');
+    setSuccessMessage('');
 
     try {
       const formData = new FormData(e.currentTarget);
@@ -36,13 +39,10 @@ function LoginContent() {
       }
 
       if (data?.user) {
-        // Refresh the page to ensure auth state is updated
         router.refresh();
-        // Redirect to admin page or specified redirect path
         router.push(redirectTo);
       }
     } catch (err) {
-      // Type assertion for error handling
       const error = err as Error;
       setErrorMessage(error.message || 'An unexpected error occurred. Please try again.');
     } finally {
@@ -50,8 +50,10 @@ function LoginContent() {
     }
   };
 
-  const handleForgotPassword = async (e: React.MouseEvent) => {
+  const handleForgotPassword = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
+    e.stopPropagation();
+    
     const email = (document.getElementById('email-address') as HTMLInputElement).value;
     
     if (!email) {
@@ -61,6 +63,7 @@ function LoginContent() {
 
     setIsLoading(true);
     setErrorMessage('');
+    setSuccessMessage('');
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
@@ -70,7 +73,7 @@ function LoginContent() {
       if (error) {
         setErrorMessage(error.message);
       } else {
-        setErrorMessage('Password reset link sent to your email!');
+        setSuccessMessage('Password reset link sent to your email!');
       }
     } catch (err) {
       const error = err as Error;
@@ -99,6 +102,20 @@ function LoginContent() {
                 </div>
                 <div className="ml-3">
                   <p className="text-sm font-medium text-red-800">{errorMessage}</p>
+                </div>
+              </div>
+            </div>
+          )}
+          {successMessage && (
+            <div className="rounded-md bg-green-50 p-4">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-green-800">{successMessage}</p>
                 </div>
               </div>
             </div>
@@ -137,6 +154,7 @@ function LoginContent() {
           <div className="flex items-center justify-between">
             <div className="text-sm">
               <button
+                type="button"
                 onClick={handleForgotPassword}
                 className="font-medium text-emerald-600 hover:text-emerald-500"
               >
