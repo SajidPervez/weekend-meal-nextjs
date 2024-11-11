@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 export default function ResetPassword() {
   const [password, setPassword] = useState('');
@@ -10,6 +10,32 @@ export default function ResetPassword() {
   const [successMessage, setSuccessMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Check for access_token in URL on component mount
+  useEffect(() => {
+    const setupSession = async () => {
+      // Get the hash fragment from the URL
+      const hash = window.location.hash;
+      
+      if (hash && hash.includes('access_token')) {
+        // Extract the access token
+        const accessToken = hash.split('access_token=')[1].split('&')[0];
+        
+        // Set the session
+        const { error } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: '',
+        });
+
+        if (error) {
+          setErrorMessage('Invalid or expired reset link. Please try again.');
+        }
+      }
+    };
+
+    setupSession();
+  }, []);
 
   const handleResetPassword = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -26,6 +52,9 @@ export default function ResetPassword() {
         setErrorMessage(error.message);
       } else {
         setSuccessMessage('Password updated successfully. Redirecting to login...');
+        // Clear the hash fragment from URL
+        window.location.hash = '';
+        
         setTimeout(() => {
           router.push('/login');
         }, 2000);
@@ -88,6 +117,7 @@ export default function ResetPassword() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               minLength={6}
+              placeholder="Enter your new password"
             />
           </div>
           <div>
