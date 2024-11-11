@@ -61,9 +61,7 @@ function AddMealContent() {
         recurring_pattern: {
           type: 'none',
           days: []
-        },
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        }
       };
 
       console.log('Submitting meal payload:', mealPayload);
