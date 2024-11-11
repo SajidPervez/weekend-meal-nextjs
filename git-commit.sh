@@ -24,10 +24,12 @@ git add .
 # Request commit message
 read -p "Enter commit message: " message
 
-# Commit with the provided message
+# Commit with the provided message and store the commit hash
 if [[ -n "$message" ]]; then
     git commit -m "$message"
+    commit_hash=$(git rev-parse HEAD)
     echo "Changes committed successfully!"
+    echo "Commit hash: $commit_hash"
 else
     echo "Commit message cannot be empty"
     git reset

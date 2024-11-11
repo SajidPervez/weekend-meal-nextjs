@@ -50,6 +50,36 @@ function LoginContent() {
     }
   };
 
+  const handleForgotPassword = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    const email = (document.getElementById('email-address') as HTMLInputElement).value;
+    
+    if (!email) {
+      setErrorMessage('Please enter your email address');
+      return;
+    }
+
+    setIsLoading(true);
+    setErrorMessage('');
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+
+      if (error) {
+        setErrorMessage(error.message);
+      } else {
+        setErrorMessage('Password reset link sent to your email!');
+      }
+    } catch (err) {
+      const error = err as Error;
+      setErrorMessage(error.message || 'An error occurred while sending reset link.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-stone-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
@@ -101,6 +131,17 @@ function LoginContent() {
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-stone-300 placeholder-stone-400 text-stone-900 rounded-b-md focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 focus:z-10 sm:text-sm font-sans"
                 placeholder="Password"
               />
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="text-sm">
+              <button
+                onClick={handleForgotPassword}
+                className="font-medium text-emerald-600 hover:text-emerald-500"
+              >
+                Forgot your password?
+              </button>
             </div>
           </div>
 
