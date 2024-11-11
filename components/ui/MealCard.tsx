@@ -18,24 +18,24 @@ export default function MealCard({ meal, onEdit, onDelete }: MealCardProps) {
     router.push(`/book/${meal.id}`);
   };
 
-  // The main_image_url should already be a complete URL from Supabase storage
-  // when the meal was created/updated, so we can use it directly
-  const imageUrl = meal.main_image_url || null;
-
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden">
-      {imageUrl && (
-        <div className="relative w-full h-48">
+      <div className="relative w-full h-48">
+        {meal.main_image_url ? (
           <Image 
-            src={imageUrl}
+            src={meal.main_image_url}
             alt={meal.title}
             fill
             className="object-cover"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             priority
           />
-        </div>
-      )}
+        ) : (
+          <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+            <span className="text-gray-400">No image available</span>
+          </div>
+        )}
+      </div>
       <div className="p-4">
         <h3 className="text-xl font-semibold mb-2">{meal.title}</h3>
         <p className="text-2xl font-bold mb-2">${meal.price.toFixed(2)}</p>

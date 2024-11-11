@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import AdminLayout from "@/components/AdminLayout";
 import MealCard from '@/components/ui/MealCard';
 import { supabase } from '@/lib/supabase';
@@ -8,10 +9,28 @@ import { Meal } from '@/types/meal';
 
 export default function AdminDashboard() {
   const [meals, setMeals] = useState<Meal[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
-    fetchMeals();
+    checkAuthAndFetchMeals();
   }, []);
+
+  const checkAuthAndFetchMeals = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        router.push('/login');
+        return;
+      }
+      await fetchMeals();
+    } catch (error) {
+      console.error('Error:', error);
+      router.push('/login');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const fetchMeals = async () => {
     const { data, error } = await supabase
@@ -45,8 +64,12 @@ export default function AdminDashboard() {
   };
 
   const handleEdit = (mealId: string) => {
-    window.location.href = `/admin/meals?edit=${mealId}`;
+    router.push(`/admin/meals?edit=${mealId}`);
   };
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <AdminLayout>
