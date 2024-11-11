@@ -41,8 +41,10 @@ function LoginContent() {
         // Redirect to the specified path or home
         router.push(redirectTo);
       }
-    } catch (error) {
-      setErrorMessage('An unexpected error occurred. Please try again.');
+    } catch (err) {
+      // Type assertion for error handling
+      const error = err as Error;
+      setErrorMessage(error.message || 'An unexpected error occurred. Please try again.');
     } finally {
       setIsLoading(false);
     }
