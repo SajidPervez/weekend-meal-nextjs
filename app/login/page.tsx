@@ -7,7 +7,7 @@ import { supabase } from '@/lib/supabase';
 function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectTo = searchParams.get('redirectTo') || '/';
+  const redirectTo = searchParams.get('redirectTo') || '/admin';
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -38,7 +38,7 @@ function LoginContent() {
       if (data?.user) {
         // Refresh the page to ensure auth state is updated
         router.refresh();
-        // Redirect to the specified path or home
+        // Redirect to admin page or specified redirect path
         router.push(redirectTo);
       }
     } catch (err) {
