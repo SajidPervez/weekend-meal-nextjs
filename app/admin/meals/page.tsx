@@ -54,14 +54,19 @@ function AddMealContent() {
         date_available: new Date(mealData.date_available).toISOString().split('T')[0],
         time_available: mealData.time_available,
         size: mealData.size || null,
-        available_for: mealData.available_for ? JSON.parse(mealData.available_for) : ['lunch'],
+        available_for: ['lunch', 'dinner'],
         availability_date: mealData.availability_date 
           ? new Date(mealData.availability_date).toISOString().split('T')[0]
           : null,
-        recurring_pattern: mealData.recurring_pattern 
-          ? JSON.parse(mealData.recurring_pattern)
-          : { type: 'none', days: [] },
+        recurring_pattern: {
+          type: 'none',
+          days: []
+        },
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       };
+
+      console.log('Submitting meal payload:', mealPayload);
 
       if (editId) {
         const { error: updateError } = await supabase
