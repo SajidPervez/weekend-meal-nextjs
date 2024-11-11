@@ -1,5 +1,5 @@
 // components/MealForm.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MealFormData } from '@/types/meal';
 
 interface MealFormProps {
@@ -8,30 +8,57 @@ interface MealFormProps {
 }
 
 const MealForm: React.FC<MealFormProps> = ({ initialMeal, onSubmit }) => {
+  // Get today's date in YYYY-MM-DD format
+  const today = new Date().toISOString().split('T')[0];
+
   const [mealData, setMealData] = useState<MealFormData>({
     title: initialMeal?.title || '',
     description: initialMeal?.description || '',
     main_image_url: initialMeal?.main_image_url || '',
-    additional_images: initialMeal?.additional_images || [],
     price: initialMeal?.price || '',
     available_quantity: initialMeal?.available_quantity || '0',
-    date_available: initialMeal?.date_available || new Date().toISOString().split('T')[0],
+    // Ensure we always have a valid date
+    date_available: initialMeal?.date_available || today,
     time_available: initialMeal?.time_available || 'lunch',
     size: initialMeal?.size || '',
-    available_for: initialMeal?.available_for || [],
-    availability_date: initialMeal?.availability_date || '',
-    recurring_pattern: initialMeal?.recurring_pattern || {
-      type: 'none',
-      days: [],
-    },
+    available_for: initialMeal?.available_for || null,
+    availability_date: initialMeal?.availability_date || null,
+    recurring_pattern: initialMeal?.recurring_pattern || null,
   });
   const [imageFile, setImageFile] = useState<File | null>(null);
+
+  // Update form when initialMeal changes
+  useEffect(() => {
+    if (initialMeal) {
+      setMealData({
+        title: initialMeal.title || '',
+        description: initialMeal.description || '',
+        main_image_url: initialMeal.main_image_url || '',
+        price: initialMeal.price || '',
+        available_quantity: initialMeal.available_quantity || '0',
+        date_available: initialMeal.date_available || today,
+        time_available: initialMeal.time_available || 'lunch',
+        size: initialMeal.size || '',
+        available_for: initialMeal.available_for || null,
+        availability_date: initialMeal.availability_date || null,
+        recurring_pattern: initialMeal.recurring_pattern || null,
+      });
+    }
+  }, [initialMeal, today]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
-    const value = e.target.type === 'number' ? e.target.value : e.target.value;
-    setMealData({ ...mealData, [e.target.name]: value });
+    const { name, value } = e.target;
+    
+    // Special handling for date fields
+    if (name === 'date_available' || name === 'availability_date') {
+      // Ensure the date is in YYYY-MM-DD format
+      const dateValue = value ? new Date(value).toISOString().split('T')[0] : null;
+      setMealData(prev => ({ ...prev, [name]: dateValue }));
+    } else {
+      setMealData(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -40,9 +67,16 @@ const MealForm: React.FC<MealFormProps> = ({ initialMeal, onSubmit }) => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(mealData, imageFile);
+    
+    // Validate date before submitting
+    if (!mealData.date_available) {
+      alert('Please select a valid date');
+      return;
+    }
+
+    await onSubmit(mealData, imageFile);
   };
 
   return (
@@ -108,7 +142,7 @@ const MealForm: React.FC<MealFormProps> = ({ initialMeal, onSubmit }) => {
         <label className="block text-gray-700">Time Available</label>
         <select
           name="time_available"
-          value={mealData.time_available || 'lunch'}
+          value={mealData.time_available}
           onChange={handleInputChange}
           className="border p-2 rounded w-full"
           required
@@ -122,10 +156,11 @@ const MealForm: React.FC<MealFormProps> = ({ initialMeal, onSubmit }) => {
         <input
           type="date"
           name="date_available"
-          value={mealData.date_available || ''}
+          value={mealData.date_available}
           onChange={handleInputChange}
           className="border p-2 rounded w-full"
           required
+          min={today} // Prevent selecting past dates
         />
       </div>
       <div className="mb-4">
