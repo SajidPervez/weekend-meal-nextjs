@@ -96,7 +96,7 @@ const MealForm: React.FC<MealFormProps> = ({ initialMeal, onSubmit }) => {
         <label className="block text-gray-700">Description</label>
         <textarea
           name="description"
-          value={mealData.description}
+          value={mealData.description || ''}
           onChange={handleInputChange}
           className="border p-2 rounded w-full"
           required
