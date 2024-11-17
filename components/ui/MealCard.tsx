@@ -5,7 +5,6 @@ import { Card } from './card';
 import { Meal } from "@/types/meal";
 import { useRouter } from "next/navigation";
 import { useState } from 'react';
-import Image from 'next/image';
 
 interface MealCardProps {
   meal: Meal;
@@ -31,13 +30,12 @@ export default function MealCard({ meal, onEdit, onDelete }: MealCardProps) {
 
   return (
     <Card className="w-full">
-      <div className="relative h-48 w-full">
+      <div className="relative h-48 w-full overflow-hidden">
         {meal.main_image_url && !imageError ? (
-          <Image
+          <img
             src={meal.main_image_url}
             alt={meal.title}
-            fill
-            className="object-cover"
+            className="w-full h-full object-cover"
             onError={() => {
               console.error('Failed to load image:', meal.main_image_url);
               setImageError(true);
