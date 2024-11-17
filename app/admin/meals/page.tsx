@@ -80,42 +80,63 @@ function AddMealContent() {
       let imageUrl = editId ? initialMeal?.main_image_url : null;
 
       if (imageFile) {
-        // Upload image to Supabase storage
-        const fileExt = imageFile.name.split('.').pop();
-        const fileName = `${Date.now()}.${fileExt}`;
-        const filePath = `meals/${fileName}`;
+        try {
+          // Check if bucket exists
+          const { error: bucketError } = await supabase
+            .storage
+            .getBucket('meal-images');
 
-        // Upload new image
-        const { error: uploadError } = await supabase.storage
-          .from('meal-images')
-          .upload(filePath, imageFile, {
-            cacheControl: '3600',
-            upsert: true
-          });
-
-        if (uploadError) {
-          console.error('Error uploading image:', uploadError);
-          return;
-        }
-
-        // Get the public URL for the uploaded image
-        const { data } = supabase.storage
-          .from('meal-images')
-          .getPublicUrl(filePath);
-
-        if (data) {
-          imageUrl = data.publicUrl;
-          console.log('Image uploaded successfully:', imageUrl);
-        }
-
-        // If editing and there's an existing image, delete it after successful upload
-        if (editId && initialMeal?.main_image_url) {
-          const oldImagePath = initialMeal.main_image_url.split('/').pop();
-          if (oldImagePath) {
-            await supabase.storage
-              .from('meal-images')
-              .remove([`meals/${oldImagePath}`]);
+          // Create bucket if it doesn't exist
+          if (bucketError?.message.includes('not found')) {
+            await supabase.storage.createBucket('meal-images', {
+              public: true
+            });
           }
+
+          // Upload image to Supabase storage
+          const fileExt = imageFile.name.split('.').pop();
+          const fileName = `${Date.now()}.${fileExt}`;
+          const filePath = `${fileName}`; // Removed 'meals/' prefix
+
+          console.log('Uploading file:', filePath);
+
+          // Upload new image
+          const { error: uploadError } = await supabase.storage
+            .from('meal-images')
+            .upload(filePath, imageFile, {
+              cacheControl: '3600',
+              upsert: true
+            });
+
+          if (uploadError) {
+            console.error('Error uploading image:', uploadError);
+            throw uploadError;
+          }
+
+          // Get the public URL for the uploaded image
+          const { data } = supabase.storage
+            .from('meal-images')
+            .getPublicUrl(filePath);
+
+          if (data) {
+            imageUrl = data.publicUrl;
+            console.log('Image uploaded successfully:', imageUrl);
+          } else {
+            throw new Error('Failed to get public URL for uploaded image');
+          }
+
+          // If editing and there's an existing image, delete it after successful upload
+          if (editId && initialMeal?.main_image_url) {
+            const oldImagePath = initialMeal.main_image_url.split('/').pop();
+            if (oldImagePath) {
+              await supabase.storage
+                .from('meal-images')
+                .remove([oldImagePath]); // Removed 'meals/' prefix
+            }
+          }
+        } catch (uploadError) {
+          console.error('Error handling image:', uploadError);
+          throw uploadError;
         }
       }
 
@@ -170,6 +191,7 @@ function AddMealContent() {
       router.push('/admin');
     } catch (error) {
       console.error('Error handling meal submission:', error);
+      throw error;
     }
   };
 
