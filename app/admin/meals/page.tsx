@@ -76,7 +76,8 @@ function AddMealContent() {
         return;
       }
 
-      let imageUrl = null;
+      // Initialize imageUrl with the existing image URL if we're editing
+      let imageUrl = editId ? initialMeal?.main_image_url : null;
 
       if (imageFile) {
         // Upload image to Supabase storage
@@ -84,9 +85,36 @@ function AddMealContent() {
         const fileName = `${Date.now()}.${fileExt}`;
         const filePath = `meals/${fileName}`;
 
+        // First, check if the bucket exists
+        const { data: bucketData, error: bucketError } = await supabase
+          .storage
+          .getBucket('meal-images');
+
+        // If bucket doesn't exist, create it
+        if (bucketError && bucketError.message.includes('not found')) {
+          await supabase.storage.createBucket('meal-images', {
+            public: true,
+            fileSizeLimit: 1024 * 1024 * 2 // 2MB limit
+          });
+        }
+
+        // If editing and there's an existing image, delete it
+        if (editId && initialMeal?.main_image_url) {
+          const oldImagePath = initialMeal.main_image_url.split('/').pop();
+          if (oldImagePath) {
+            await supabase.storage
+              .from('meal-images')
+              .remove([`meals/${oldImagePath}`]);
+          }
+        }
+
+        // Upload new image
         const { error: uploadError } = await supabase.storage
           .from('meal-images')
-          .upload(filePath, imageFile);
+          .upload(filePath, imageFile, {
+            cacheControl: '3600',
+            upsert: false
+          });
 
         if (uploadError) {
           console.error('Error uploading image:', uploadError);
@@ -110,7 +138,7 @@ function AddMealContent() {
       const mealPayload = {
         title: mealData.title,
         description: mealData.description || null,
-        main_image_url: imageUrl || null,
+        main_image_url: imageUrl, // This will now preserve existing image URL if no new image is uploaded
         price: parseFloat(mealData.price?.toString() || '0'),
         available_quantity: parseInt(mealData.available_quantity?.toString() || '0'),
         date_available: new Date(mealData.date_available).toISOString().split('T')[0],
