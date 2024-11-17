@@ -81,22 +81,10 @@ function AddMealContent() {
 
       if (imageFile) {
         try {
-          // Check if bucket exists
-          const { error: bucketError } = await supabase
-            .storage
-            .getBucket('meal-images');
-
-          // Create bucket if it doesn't exist
-          if (bucketError?.message.includes('not found')) {
-            await supabase.storage.createBucket('meal-images', {
-              public: true
-            });
-          }
-
           // Upload image to Supabase storage
           const fileExt = imageFile.name.split('.').pop();
           const fileName = `${Date.now()}.${fileExt}`;
-          const filePath = `${fileName}`; // Removed 'meals/' prefix
+          const filePath = `${fileName}`;
 
           console.log('Uploading file:', filePath);
 
@@ -105,7 +93,8 @@ function AddMealContent() {
             .from('meal-images')
             .upload(filePath, imageFile, {
               cacheControl: '3600',
-              upsert: true
+              upsert: true,
+              contentType: imageFile.type
             });
 
           if (uploadError) {
@@ -131,7 +120,7 @@ function AddMealContent() {
             if (oldImagePath) {
               await supabase.storage
                 .from('meal-images')
-                .remove([oldImagePath]); // Removed 'meals/' prefix
+                .remove([oldImagePath]);
             }
           }
         } catch (uploadError) {

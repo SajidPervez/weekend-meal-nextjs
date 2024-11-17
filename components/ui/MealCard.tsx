@@ -4,7 +4,7 @@
 import { Card } from './card';
 import { Meal } from "@/types/meal";
 import { useRouter } from "next/navigation";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface MealCardProps {
   meal: Meal;
@@ -15,6 +15,13 @@ interface MealCardProps {
 export default function MealCard({ meal, onEdit, onDelete }: MealCardProps) {
   const router = useRouter();
   const [imageError, setImageError] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
+
+  useEffect(() => {
+    if (meal.main_image_url) {
+      console.log('Attempting to load image:', meal.main_image_url);
+    }
+  }, [meal.main_image_url]);
 
   const handleBookNow = () => {
     router.push(`/book/${meal.id}`);
@@ -28,21 +35,32 @@ export default function MealCard({ meal, onEdit, onDelete }: MealCardProps) {
     if (onDelete) onDelete(meal.id);
   };
 
+  const handleImageLoad = () => {
+    console.log('Image loaded successfully:', meal.main_image_url);
+    setImageLoaded(true);
+  };
+
+  const handleImageError = () => {
+    console.error('Failed to load image:', meal.main_image_url);
+    setImageError(true);
+  };
+
   return (
     <Card className="w-full">
-      <div className="relative h-48 w-full overflow-hidden">
-        {meal.main_image_url && !imageError ? (
+      <div className="relative h-48 w-full overflow-hidden bg-gray-100">
+        {meal.main_image_url && !imageError && (
           <img
             src={meal.main_image_url}
             alt={meal.title}
-            className="w-full h-full object-cover"
-            onError={() => {
-              console.error('Failed to load image:', meal.main_image_url);
-              setImageError(true);
-            }}
+            className={`w-full h-full object-cover transition-opacity duration-300 ${
+              imageLoaded ? 'opacity-100' : 'opacity-0'
+            }`}
+            onLoad={handleImageLoad}
+            onError={handleImageError}
           />
-        ) : (
-          <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+        )}
+        {(!meal.main_image_url || imageError) && (
+          <div className="absolute inset-0 flex items-center justify-center bg-gray-200">
             <span className="text-gray-400">No image available</span>
           </div>
         )}
