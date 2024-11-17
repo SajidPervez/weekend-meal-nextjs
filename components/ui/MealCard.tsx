@@ -1,41 +1,42 @@
 // components/MealCard.tsx
 'use client';
 
+import { Card } from './card';
 import { Meal } from "@/types/meal";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { useState } from 'react';
 
 interface MealCardProps {
   meal: Meal;
-  onEdit?: () => void;
-  onDelete?: () => void;
+  onEdit?: (id: string) => void;
+  onDelete?: (id: string) => void;
+  isAdmin?: boolean;
 }
 
-export default function MealCard({ meal, onEdit, onDelete }: MealCardProps) {
+export default function MealCard({ meal, onEdit, onDelete, isAdmin = false }: MealCardProps) {
   const router = useRouter();
+  const [imageError, setImageError] = useState(false);
 
   const handleBookNow = () => {
     router.push(`/book/${meal.id}`);
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden">
-      <div className="relative w-full h-48">
-        {meal.main_image_url ? (
-          <Image 
+    <Card className="w-full">
+      {meal.main_image_url && !imageError && (
+        <div className="relative h-48 w-full">
+          <img
             src={meal.main_image_url}
             alt={meal.title}
-            fill
-            className="object-cover"
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-            priority
+            className="absolute inset-0 h-full w-full object-cover"
+            onError={() => {
+              console.error('Failed to load image:', meal.main_image_url);
+              setImageError(true);
+            }}
           />
-        ) : (
-          <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-            <span className="text-gray-400">No image available</span>
-          </div>
-        )}
-      </div>
+        </div>
+      )}
       <div className="p-4">
         <h3 className="text-xl font-semibold mb-2">{meal.title}</h3>
         <p className="text-2xl font-bold mb-2">${meal.price.toFixed(2)}</p>
@@ -70,6 +71,6 @@ export default function MealCard({ meal, onEdit, onDelete }: MealCardProps) {
           </button>
         )}
       </div>
-    </div>
+    </Card>
   );
 }

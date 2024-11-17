@@ -85,35 +85,12 @@ function AddMealContent() {
         const fileName = `${Date.now()}.${fileExt}`;
         const filePath = `meals/${fileName}`;
 
-        // First, check if the bucket exists
-        const { error: bucketError } = await supabase
-          .storage
-          .getBucket('meal-images');
-
-        // If bucket doesn't exist, create it
-        if (bucketError && bucketError.message.includes('not found')) {
-          await supabase.storage.createBucket('meal-images', {
-            public: true,
-            fileSizeLimit: 1024 * 1024 * 2 // 2MB limit
-          });
-        }
-
-        // If editing and there's an existing image, delete it
-        if (editId && initialMeal?.main_image_url) {
-          const oldImagePath = initialMeal.main_image_url.split('/').pop();
-          if (oldImagePath) {
-            await supabase.storage
-              .from('meal-images')
-              .remove([`meals/${oldImagePath}`]);
-          }
-        }
-
         // Upload new image
-        const { error: uploadError } = await supabase.storage
+        const { error: uploadError, data: uploadData } = await supabase.storage
           .from('meal-images')
           .upload(filePath, imageFile, {
             cacheControl: '3600',
-            upsert: false
+            upsert: true
           });
 
         if (uploadError) {
@@ -126,7 +103,20 @@ function AddMealContent() {
           .from('meal-images')
           .getPublicUrl(filePath);
 
-        imageUrl = data.publicUrl;
+        if (data) {
+          imageUrl = data.publicUrl;
+          console.log('Image uploaded successfully:', imageUrl);
+        }
+
+        // If editing and there's an existing image, delete it after successful upload
+        if (editId && initialMeal?.main_image_url) {
+          const oldImagePath = initialMeal.main_image_url.split('/').pop();
+          if (oldImagePath) {
+            await supabase.storage
+              .from('meal-images')
+              .remove([`meals/${oldImagePath}`]);
+          }
+        }
       }
 
       // Validate required fields
@@ -138,7 +128,7 @@ function AddMealContent() {
       const mealPayload = {
         title: mealData.title,
         description: mealData.description || null,
-        main_image_url: imageUrl, // This will now preserve existing image URL if no new image is uploaded
+        main_image_url: imageUrl,
         price: parseFloat(mealData.price?.toString() || '0'),
         available_quantity: parseInt(mealData.available_quantity?.toString() || '0'),
         date_available: new Date(mealData.date_available).toISOString().split('T')[0],
@@ -154,7 +144,7 @@ function AddMealContent() {
         }
       };
 
-      console.log('Submitting meal payload:', mealPayload);
+      console.log('Final meal payload with image:', mealPayload);
 
       if (editId) {
         const { error: updateError } = await supabase
