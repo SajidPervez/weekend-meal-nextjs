@@ -86,7 +86,7 @@ function AddMealContent() {
         const filePath = `meals/${fileName}`;
 
         // Upload new image
-        const { error: uploadError, data: uploadData } = await supabase.storage
+        const { error: uploadError } = await supabase.storage
           .from('meal-images')
           .upload(filePath, imageFile, {
             cacheControl: '3600',

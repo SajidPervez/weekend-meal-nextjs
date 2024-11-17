@@ -4,22 +4,28 @@
 import { Card } from './card';
 import { Meal } from "@/types/meal";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import { useState } from 'react';
 
 interface MealCardProps {
   meal: Meal;
   onEdit?: (id: string) => void;
   onDelete?: (id: string) => void;
-  isAdmin?: boolean;
 }
 
-export default function MealCard({ meal, onEdit, onDelete, isAdmin = false }: MealCardProps) {
+export default function MealCard({ meal, onEdit, onDelete }: MealCardProps) {
   const router = useRouter();
   const [imageError, setImageError] = useState(false);
 
   const handleBookNow = () => {
     router.push(`/book/${meal.id}`);
+  };
+
+  const handleEdit = () => {
+    if (onEdit) onEdit(meal.id);
+  };
+
+  const handleDelete = () => {
+    if (onDelete) onDelete(meal.id);
   };
 
   return (
@@ -49,13 +55,13 @@ export default function MealCard({ meal, onEdit, onDelete, isAdmin = false }: Me
         {onEdit && onDelete ? (
           <div className="space-x-2">
             <button
-              onClick={onEdit}
+              onClick={handleEdit}
               className="bg-yellow-500 text-white px-2 py-1 rounded hover:bg-yellow-600"
             >
               Edit
             </button>
             <button
-              onClick={onDelete}
+              onClick={handleDelete}
               className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
             >
               Delete
