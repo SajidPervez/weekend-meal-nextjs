@@ -12,10 +12,14 @@ function AddMealContent() {
   const searchParams = useSearchParams();
   const editId = searchParams.get('edit');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [initialMeal, setInitialMeal] = useState<MealFormData | null>(null);
 
   useEffect(() => {
     checkAuth();
-  }, []);
+    if (editId) {
+      fetchMealData(editId);
+    }
+  }, [editId]);
 
   const checkAuth = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -24,6 +28,42 @@ function AddMealContent() {
       return;
     }
     setIsAuthenticated(true);
+  };
+
+  const fetchMealData = async (id: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('meals')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error) {
+        console.error('Error fetching meal:', error);
+        return;
+      }
+
+      if (data) {
+        // Transform the data to match MealFormData structure
+        const formData: MealFormData = {
+          id: data.id,
+          title: data.title,
+          description: data.description,
+          main_image_url: data.main_image_url,
+          price: data.price,
+          available_quantity: data.available_quantity,
+          date_available: data.date_available,
+          time_available: data.time_available,
+          size: data.size,
+          available_for: data.available_for?.[0] || null,
+          availability_date: data.availability_date,
+          recurring_pattern: data.recurring_pattern?.type || null
+        };
+        setInitialMeal(formData);
+      }
+    } catch (error) {
+      console.error('Error fetching meal data:', error);
+    }
   };
 
   const handleMealSubmit = async (mealData: Partial<MealFormData>, imageFile: File | null) => {
@@ -127,7 +167,7 @@ function AddMealContent() {
         </h1>
 
         <MealForm 
-          initialMeal={null}
+          initialMeal={initialMeal}
           onSubmit={handleMealSubmit} 
         />
       </div>
