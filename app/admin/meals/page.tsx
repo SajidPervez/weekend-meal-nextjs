@@ -14,13 +14,6 @@ function AddMealContent() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [initialMeal, setInitialMeal] = useState<MealFormData | null>(null);
 
-  useEffect(() => {
-    checkAuth();
-    if (editId) {
-      fetchMealData(editId);
-    }
-  }, [editId, checkAuth]);
-
   const checkAuth = useCallback(async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
@@ -29,6 +22,13 @@ function AddMealContent() {
     }
     setIsAuthenticated(true);
   }, [router]);
+
+  useEffect(() => {
+    checkAuth();
+    if (editId) {
+      fetchMealData(editId);
+    }
+  }, [editId, checkAuth]);
 
   const fetchMealData = async (id: string) => {
     try {
