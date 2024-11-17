@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useState, useCallback } from 'react';
 import MealForm from '@/components/ui/MealForm';
 import { supabase } from '@/lib/supabase';
 import { MealFormData } from '@/types/meal';
@@ -19,16 +19,16 @@ function AddMealContent() {
     if (editId) {
       fetchMealData(editId);
     }
-  }, [editId]);
+  }, [editId, checkAuth]);
 
-  const checkAuth = async () => {
+  const checkAuth = useCallback(async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
       router.push('/login');
       return;
     }
     setIsAuthenticated(true);
-  };
+  }, [router]);
 
   const fetchMealData = async (id: string) => {
     try {
@@ -86,7 +86,7 @@ function AddMealContent() {
         const filePath = `meals/${fileName}`;
 
         // First, check if the bucket exists
-        const { data: bucketData, error: bucketError } = await supabase
+        const { error: bucketError } = await supabase
           .storage
           .getBucket('meal-images');
 
