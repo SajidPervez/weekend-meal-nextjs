@@ -106,10 +106,11 @@ export default function BookingForm({ meal }: BookingFormProps) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      {/* Left side - Image and Meal Details */}
       <div className="rounded-lg overflow-hidden border border-gray-200">
         {meal.main_image_url && !imageError && (
-          <div className="relative h-64 w-full">
+          <div className="relative h-96 w-full">
             <img
               src={meal.main_image_url}
               alt={meal.title}
@@ -118,98 +119,108 @@ export default function BookingForm({ meal }: BookingFormProps) {
             />
           </div>
         )}
-        <div className="p-4 bg-gray-50">
+        <div className="p-6 bg-gray-50">
           <h2 className="text-2xl font-bold mb-2">{meal.title}</h2>
           {meal.description && (
-            <p className="text-gray-600 mb-2">{meal.description}</p>
+            <p className="text-gray-600 mb-4">{meal.description}</p>
           )}
-          <div className="text-lg font-semibold text-emerald-600">
+          <div className="space-y-2 text-sm text-gray-600">
+            <p>Available Quantity: {meal.available_quantity}</p>
+            <p>Size: {meal.size}</p>
+            <p>Pick-up Date: {new Date(meal.date_available).toLocaleDateString()}</p>
+            <p>Pick-up Time: {meal.time_available}</p>
+          </div>
+          <div className="mt-4 text-2xl font-semibold text-emerald-600">
             ${meal.price.toFixed(2)}
           </div>
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {error && (
-          <div className="bg-red-50 border border-red-500 rounded p-4 text-red-700">
-            {error}
+      {/* Right side - Booking Form */}
+      <div>
+        <h2 className="text-xl font-bold mb-6">Booking Details</h2>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {error && (
+            <div className="bg-red-50 border border-red-500 rounded p-4 text-red-700">
+              {error}
+            </div>
+          )}
+          
+          <div>
+            <label className="block text-gray-700 text-sm font-bold mb-2">
+              Quantity:
+            </label>
+            <input 
+              type="number" 
+              min="1"
+              max={meal.available_quantity}
+              value={quantity}
+              onChange={(e) => setQuantity(parseInt(e.target.value))}
+              required
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            />
           </div>
-        )}
-        
-        <div>
-          <label className="block text-gray-700 text-sm font-bold mb-2">
-            Quantity:
-          </label>
-          <input 
-            type="number" 
-            min="1"
-            max={meal.available_quantity}
-            value={quantity}
-            onChange={(e) => setQuantity(parseInt(e.target.value))}
-            required
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-          />
-        </div>
 
-        <div>
-          <label className="block text-gray-700 text-sm font-bold mb-2">
-            Email (optional):
-          </label>
-          <input 
-            type="email" 
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-          />
-        </div>
+          <div>
+            <label className="block text-gray-700 text-sm font-bold mb-2">
+              Email (only required for receipts):
+            </label>
+            <input 
+              type="email" 
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            />
+          </div>
 
-        <div>
-          <label className="block text-gray-700 text-sm font-bold mb-2">
-            Phone (required):
-          </label>
-          <input 
-            type="tel" 
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            required
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-          />
-        </div>
+          <div>
+            <label className="block text-gray-700 text-sm font-bold mb-2">
+              Phone (required):
+            </label>
+            <input 
+              type="tel" 
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              required
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            />
+          </div>
 
-        <div>
-          <label className="block text-gray-700 text-sm font-bold mb-2">
-            Pickup Time:
-          </label>
-          <select
-            value={pickupTime}
-            onChange={(e) => setPickupTime(e.target.value as '12:00' | '18:00')}
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-            required
+          <div>
+            <label className="block text-gray-700 text-sm font-bold mb-2">
+              Pickup Time:
+            </label>
+            <select
+              value={pickupTime}
+              onChange={(e) => setPickupTime(e.target.value as '12:00' | '18:00')}
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              required
+            >
+              <option value="12:00">Lunch (12:00 PM)</option>
+              <option value="18:00">Dinner (6:00 PM)</option>
+            </select>
+          </div>
+
+          <div className="border-t pt-4 mt-4">
+            <div className="flex justify-between mb-4">
+              <span>Price per item:</span>
+              <span>${meal.price.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between mb-4 text-lg font-bold">
+              <span>Total Price:</span>
+              <span>${(meal.price * quantity).toFixed(2)}</span>
+            </div>
+          </div>
+
+          <Button 
+            type="submit" 
+            className="w-full"
+            disabled={loading || meal.available_quantity < 1}
           >
-            <option value="12:00">Lunch (12:00 PM)</option>
-            <option value="18:00">Dinner (6:00 PM)</option>
-          </select>
-        </div>
-
-        <div className="border-t pt-4 mt-4">
-          <div className="flex justify-between mb-4">
-            <span>Price per item:</span>
-            <span>${meal.price.toFixed(2)}</span>
-          </div>
-          <div className="flex justify-between mb-4 text-lg font-bold">
-            <span>Total Price:</span>
-            <span>${(meal.price * quantity).toFixed(2)}</span>
-          </div>
-        </div>
-
-        <Button 
-          type="submit" 
-          className="w-full"
-          disabled={loading || meal.available_quantity < 1}
-        >
-          {loading ? 'Processing...' : meal.available_quantity < 1 ? 'Sold Out' : 'Book Now'}
-        </Button>
-      </form>
+            {loading ? 'Processing...' : meal.available_quantity < 1 ? 'Sold Out' : 'Book Now'}
+          </Button>
+        </form>
+      </div>
     </div>
   );
 }
