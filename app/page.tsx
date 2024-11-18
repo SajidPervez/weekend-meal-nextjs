@@ -51,23 +51,12 @@ export default function HomePage() {
           <Utensils className="h-6 w-6" />
           <span className="ml-2 text-xl font-bold">Tasty Bites</span>
         </Link>
-        <nav className="ml-auto flex gap-4 sm:gap-6">
-          <Link className="text-sm font-medium hover:underline underline-offset-4" href="#">
-            Menu
-          </Link>
-          <Link className="text-sm font-medium hover:underline underline-offset-4" href="#">
-            About
-          </Link>
-          <Link className="text-sm font-medium hover:underline underline-offset-4" href="#">
-            Contact
-          </Link>
-        </nav>
       </header>
       <main className="flex-1">
-        <section className="w-full py-12 md:py-24 lg:py-32 xl:py-48 relative overflow-hidden">
-          <div className="absolute inset-0 bg-cover bg-center bg-no-repeat" style={{backgroundImage: 'url("/images/chicken-biryani.jpg")' , backgroundPosition: 'right'}}></div>
-          <div className="container px-4 md:px-6 relative z-20">
-            <div className="max-w-2xl bg-white bg-opacity-80 p-6 rounded-lg">
+        <section className="w-full py-12 md:py-24 lg:py-32 xl:py-48 relative overflow-hidden bg-gradient-to-b from-gray-100 to-gray-200">
+          <div className="absolute inset-0 bg-grid-pattern opacity-10 animate-grid"></div>
+          <div className="container px-4 md:px-6 relative z-20 flex flex-col md:flex-row items-center justify-between">
+            <div className="max-w-xl bg-white/80 backdrop-blur-sm p-6 rounded-lg md:mr-8">
               <h1 className="text-3xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none mb-4 text-gray-900">
                 Delicious Meals, Delivered to You
               </h1>
@@ -75,10 +64,19 @@ export default function HomePage() {
                 Discover our chef&apos;s special: Chicken Biryani
               </p>
               <div className="flex flex-col gap-2 min-[400px]:flex-row">
-                <Button size="lg">Order Now</Button>
-                <Button size="lg" variant="outline">
-                  View Menu
+                <Button size="lg" className="bg-emerald-600 hover:bg-emerald-700">
+                  Order Now
                 </Button>
+              </div>
+            </div>
+            <div className="relative mt-8 md:mt-0 w-full max-w-md">
+              <div className="relative w-full h-[400px] animate-float">
+                <img
+                  src="/images/chicken-biryani.jpg"
+                  alt="Special Meal"
+                  className="absolute inset-0 w-full h-full object-cover rounded-lg shadow-2xl"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-lg"></div>
               </div>
             </div>
           </div>
@@ -97,9 +95,6 @@ export default function HomePage() {
       <footer className="flex flex-col gap-2 sm:flex-row py-6 w-full shrink-0 items-center px-4 md:px-6 border-t bg-gray-800 text-white">
         <p className="text-xs text-gray-400">© {new Date().getFullYear()} Tasty Bites. All rights reserved.</p>
         <nav className="sm:ml-auto flex gap-4 sm:gap-6">
-          <Link className="text-xs hover:underline underline-offset-4" href="#">
-            About
-          </Link>
           <Link className="text-xs hover:underline underline-offset-4" href="#">
             Terms of Service
           </Link>

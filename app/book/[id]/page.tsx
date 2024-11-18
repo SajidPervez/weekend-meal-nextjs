@@ -43,15 +43,10 @@ export default function BookingPage() {
     }
 
     return (
-        <div className="container mx-auto px-4 py-8">
-            <h1 className="text-2xl font-bold mb-6">Booking for {meal.title}</h1>
-            
-            <div className="grid md:grid-cols-2 gap-8">
-                {/* Booking Form Section */}
-                <div className="bg-white rounded-lg shadow-md p-6">
-                    <h2 className="text-xl font-bold mb-6">Booking Details</h2>
-                    <BookingForm meal={meal} />
-                </div>
+        <div className="container mx-auto px-4 py-8 max-w-6xl">
+            <h1 className="text-2xl font-bold mb-6 text-center">Booking for {meal.title}</h1>
+            <div className="max-w-5xl mx-auto">
+                <BookingForm meal={meal} />
             </div>
         </div>
     );
