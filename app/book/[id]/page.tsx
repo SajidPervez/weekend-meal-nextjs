@@ -2,7 +2,6 @@
 
 import { useParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import Image from 'next/image';
 import { supabase } from '@/lib/supabase';
 import type { Meal } from '@/types/meal';
 import BookingForm from '@/components/ui/BookingForm';
@@ -48,8 +47,6 @@ export default function BookingPage() {
             <h1 className="text-2xl font-bold mb-6">Booking for {meal.title}</h1>
             
             <div className="grid md:grid-cols-2 gap-8">
-              
-
                 {/* Booking Form Section */}
                 <div className="bg-white rounded-lg shadow-md p-6">
                     <h2 className="text-xl font-bold mb-6">Booking Details</h2>
