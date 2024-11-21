@@ -93,6 +93,27 @@ export default function HomePage() {
             </p>
           </div>
         </section>
+
+        <section className="w-full py-12 bg-gray-50">
+          <div className="container mx-auto px-4">
+            <h2 className="text-3xl font-bold text-center mb-8">More Menu Items</h2>
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {meals.map((meal) => (
+                <div key={meal.id} className="bg-white rounded-lg shadow-md overflow-hidden">
+                  <MealCard meal={meal} />
+                  <div className="p-4">
+                    <Button 
+                      className="w-full bg-yellow-500 hover:bg-yellow-600 text-black"
+                      onClick={() => console.log(`Order ${meal.name}`)}
+                    >
+                      Order Now
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
       </main>
     </div>
   )
