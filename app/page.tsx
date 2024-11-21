@@ -89,7 +89,7 @@ export default function HomePage() {
             <p className="text-center text-gray-700 max-w-2xl mx-auto">
               It starts with two 100% Aussie beef patties. Then comes the delicious combination of
               crisp iceberg lettuce, melting signature cheese, onions and pickles, between a toasted
-              sesame seed bun. And don't forget the McDonald's special sauce!
+              sesame seed bun. And don&apos;t forget the McDonald&apos;s special sauce!
             </p>
           </div>
         </section>
@@ -104,7 +104,7 @@ export default function HomePage() {
                   <div className="p-4">
                     <Button 
                       className="w-full bg-yellow-500 hover:bg-yellow-600 text-black"
-                      onClick={() => console.log(`Order ${meal.name}`)}
+                      onClick={() => console.log(`Order ${meal.id}`)}
                     >
                       Order Now
                     </Button>
