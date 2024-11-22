@@ -8,16 +8,6 @@ import { supabase } from '@/lib/supabase';
 import type { Meal } from '@/types/meal';
 import MealCard from '@/components/ui/MealCard';
 
-// Define the Meal type if not already defined in @/types/meal
-interface Meal {
-  id: string;
-  name: string;
-  description: string;
-  image_url: string;
-  date_available: string;
-  price: number;
-}
-
 export default function HomePage() {
   const [meals, setMeals] = useState<Meal[]>([]);
   const [featuredMeal, setFeaturedMeal] = useState<Meal | null>(null);
