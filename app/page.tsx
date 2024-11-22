@@ -20,6 +20,7 @@ export default function HomePage() {
   useEffect(() => {
     if (featuredMeal) {
       console.log('Featured Meal Data:', featuredMeal);
+      console.log('Image URL:', featuredMeal.main_image_url);
     }
   }, [featuredMeal]);
 
@@ -90,6 +91,9 @@ export default function HomePage() {
                       src={featuredMeal.main_image_url}
                       alt={featuredMeal.title}
                       fill
+                      priority
+                      quality={100}
+                      unoptimized
                       className="object-contain"
                       onError={() => {
                         console.error('Image failed to load:', featuredMeal.main_image_url);
