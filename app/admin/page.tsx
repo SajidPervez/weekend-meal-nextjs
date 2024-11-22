@@ -45,12 +45,12 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleDelete = async (mealId: string) => {
-    try {
+  const handleDelete = async (id: number) => {
+    if (window.confirm('Are you sure you want to delete this meal?')) {
       const { error } = await supabase
         .from('meals')
         .delete()
-        .eq('id', mealId);
+        .eq('id', id);
 
       if (error) {
         console.error('Error deleting meal:', error);
@@ -58,13 +58,14 @@ export default function AdminDashboard() {
       }
 
       await fetchMeals();
-    } catch (error) {
-      console.error('Error handling meal deletion:', error);
     }
   };
 
-  const handleEdit = (mealId: string) => {
-    router.push(`/admin/meals?edit=${mealId}`);
+  const handleEdit = (id: number) => {
+    const meal = meals.find(m => m.id === id);
+    if (meal) {
+      setEditingMeal(meal);
+    }
   };
 
   if (isLoading) {
@@ -79,8 +80,8 @@ export default function AdminDashboard() {
             <MealCard 
               key={meal.id} 
               meal={meal} 
-              onEdit={() => handleEdit(meal.id)} 
-              onDelete={() => handleDelete(meal.id)} 
+              onEdit={handleEdit} 
+              onDelete={handleDelete} 
             />
           ))}
         </div>
