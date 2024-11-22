@@ -8,8 +8,8 @@ import { useState, useEffect } from 'react';
 
 interface MealCardProps {
   meal: Meal;
-  onEdit?: (id: string) => void;
-  onDelete?: (id: string) => void;
+  onEdit?: (id: number) => void;
+  onDelete?: (id: number) => void;
 }
 
 export default function MealCard({ meal, onEdit, onDelete }: MealCardProps) {
@@ -18,10 +18,10 @@ export default function MealCard({ meal, onEdit, onDelete }: MealCardProps) {
   const [imageLoaded, setImageLoaded] = useState(false);
 
   useEffect(() => {
-    if (meal.main_image_url) {
-      console.log('Attempting to load image:', meal.main_image_url);
+    if (meal.image_urls?.[0]) {
+      console.log('Attempting to load image:', meal.image_urls[0]);
     }
-  }, [meal.main_image_url]);
+  }, [meal.image_urls]);
 
   const handleBookNow = () => {
     router.push(`/book/${meal.id}`);
@@ -36,21 +36,21 @@ export default function MealCard({ meal, onEdit, onDelete }: MealCardProps) {
   };
 
   const handleImageLoad = () => {
-    console.log('Image loaded successfully:', meal.main_image_url);
+    console.log('Image loaded successfully:', meal.image_urls?.[0]);
     setImageLoaded(true);
   };
 
   const handleImageError = () => {
-    console.error('Failed to load image:', meal.main_image_url);
+    console.error('Failed to load image:', meal.image_urls?.[0]);
     setImageError(true);
   };
 
   return (
     <Card className="w-full">
       <div className="relative h-48 w-full overflow-hidden bg-gray-100">
-        {meal.main_image_url && !imageError && (
+        {meal.image_urls?.[0] && !imageError && (
           <img
-            src={meal.main_image_url}
+            src={meal.image_urls[0]}
             alt={meal.title}
             className={`w-full h-full object-cover transition-opacity duration-300 ${
               imageLoaded ? 'opacity-100' : 'opacity-0'
@@ -59,7 +59,7 @@ export default function MealCard({ meal, onEdit, onDelete }: MealCardProps) {
             onError={handleImageError}
           />
         )}
-        {(!meal.main_image_url || imageError) && (
+        {(!meal.image_urls?.[0] || imageError) && (
           <div className="absolute inset-0 flex items-center justify-center bg-gray-200">
             <span className="text-gray-400">No image available</span>
           </div>

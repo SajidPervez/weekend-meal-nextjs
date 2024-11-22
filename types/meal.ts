@@ -1,12 +1,11 @@
-export interface Meal {
-  id: string;
+export type Meal = {
+  id: number;
   title: string;
-  description: string | null;
-  main_image_url: string | null;
-  additional_images: string[];
+  description: string;
   price: number;
-  available_quantity: number;
   date_available: string;
+  image_urls: string[];
+  available_quantity: number;
   time_available: 'lunch' | 'dinner';
   size: string;
   available_for: ('lunch' | 'dinner')[];

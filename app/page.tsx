@@ -12,17 +12,11 @@ export default function HomePage() {
   const [meals, setMeals] = useState<Meal[]>([]);
   const [featuredMeal, setFeaturedMeal] = useState<Meal | null>(null);
   const [loading, setLoading] = useState(true);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   useEffect(() => {
     fetchMeals();
   }, []);
-
-  useEffect(() => {
-    if (featuredMeal) {
-      console.log('Featured Meal Data:', featuredMeal);
-      console.log('Image URL:', featuredMeal.main_image_url);
-    }
-  }, [featuredMeal]);
 
   const fetchMeals = async () => {
     try {
@@ -36,10 +30,9 @@ export default function HomePage() {
 
       if (error) throw error;
       
-      // Set the first meal as featured meal
       if (data && data.length > 0) {
         setFeaturedMeal(data[0]);
-        setMeals(data.slice(1)); // Set remaining meals
+        setMeals(data); // Now including the featured meal in the grid
       } else {
         setMeals([]);
       }
@@ -47,6 +40,22 @@ export default function HomePage() {
       console.error('Error fetching meals:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handlePrevImage = () => {
+    if (featuredMeal?.image_urls?.length) {
+      setCurrentImageIndex((prev) => 
+        prev === 0 ? featuredMeal.image_urls.length - 1 : prev - 1
+      );
+    }
+  };
+
+  const handleNextImage = () => {
+    if (featuredMeal?.image_urls?.length) {
+      setCurrentImageIndex((prev) => 
+        prev === featuredMeal.image_urls.length - 1 ? 0 : prev + 1
+      );
     }
   };
 
@@ -86,29 +95,36 @@ export default function HomePage() {
               </h1>
               <div className="w-full max-w-2xl mx-auto mb-8">
                 <div className="relative w-full h-[500px]">
-                  {featuredMeal.main_image_url && (
+                  {featuredMeal.image_urls?.[currentImageIndex] && (
                     <Image
-                      src={featuredMeal.main_image_url}
-                      alt={featuredMeal.title}
+                      src={featuredMeal.image_urls[currentImageIndex]}
+                      alt={`${featuredMeal.title} - Image ${currentImageIndex + 1}`}
                       fill
                       priority
                       quality={100}
-                      unoptimized
                       className="object-contain"
                       onError={() => {
-                        console.error('Image failed to load:', featuredMeal.main_image_url);
+                        console.error('Image failed to load:', featuredMeal.image_urls[currentImageIndex]);
                       }}
                     />
                   )}
                 </div>
-                <div className="flex justify-between mt-4">
-                  <button className="p-2 rounded-full bg-white shadow-md hover:bg-gray-50">
-                    <ArrowLeft className="h-6 w-6 text-emerald-600" />
-                  </button>
-                  <button className="p-2 rounded-full bg-white shadow-md hover:bg-gray-50">
-                    <ArrowLeft className="h-6 w-6 text-emerald-600 rotate-180" />
-                  </button>
-                </div>
+                {featuredMeal.image_urls?.length > 1 && (
+                  <div className="flex justify-between mt-4">
+                    <button 
+                      onClick={handlePrevImage}
+                      className="p-2 rounded-full bg-white shadow-md hover:bg-gray-50"
+                    >
+                      <ArrowLeft className="h-6 w-6 text-emerald-600" />
+                    </button>
+                    <button 
+                      onClick={handleNextImage}
+                      className="p-2 rounded-full bg-white shadow-md hover:bg-gray-50"
+                    >
+                      <ArrowLeft className="h-6 w-6 text-emerald-600 rotate-180" />
+                    </button>
+                  </div>
+                )}
               </div>
               <p className="text-center text-gray-700 max-w-2xl mx-auto">
                 {featuredMeal.description}
@@ -123,7 +139,7 @@ export default function HomePage() {
 
         <section className="w-full py-12 bg-gray-50">
           <div className="container mx-auto px-4">
-            <h2 className="text-3xl font-bold text-center mb-8">More Menu Items</h2>
+            <h2 className="text-3xl font-bold text-center mb-8">Menu Items</h2>
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {meals.map((meal) => (
                 <div key={meal.id} className="bg-white rounded-lg shadow-md overflow-hidden">
