@@ -80,43 +80,31 @@ export default function HomePage() {
         {featuredMeal ? (
           <section className="w-full py-12 px-4">
             <div className="container mx-auto max-w-4xl">
-              <div className="bg-gray-100 p-4 mb-4 rounded-lg">
-                <p>Debug Info:</p>
-                <p>Title: {featuredMeal.title}</p>
-                <p>Image URL: {featuredMeal.main_image_url}</p>
-              </div>
-
               <h1 className="text-4xl md:text-6xl font-bold text-center mb-8">
                 {featuredMeal.title}
               </h1>
-              <div className="relative w-full aspect-square max-w-2xl mx-auto mb-8">
-                <div className="relative w-full h-full bg-gray-100">
-                  {featuredMeal.main_image_url ? (
-                    <Image
+              <div className="w-full max-w-2xl mx-auto mb-8">
+                <div className="relative w-full h-[500px]">
+                  {featuredMeal.main_image_url && (
+                    <img
                       src={featuredMeal.main_image_url}
-                      alt={featuredMeal.title || 'Featured meal'}
-                      fill
-                      className="object-contain"
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                      priority
+                      alt={featuredMeal.title}
+                      className="w-full h-full object-contain"
                       onError={(e) => {
                         console.error('Image failed to load:', featuredMeal.main_image_url);
-                        // Fallback to a default image or show error state
                         e.currentTarget.src = '/images/default-meal.jpg';
                       }}
                     />
-                  ) : (
-                    <div className="absolute inset-0 flex items-center justify-center text-gray-500">
-                      No image available
-                    </div>
                   )}
                 </div>
-                <button className="absolute left-4 top-1/2 transform -translate-y-1/2">
-                  <ArrowLeft className="h-8 w-8 text-emerald-600" />
-                </button>
-                <button className="absolute right-4 top-1/2 transform -translate-y-1/2">
-                  <ArrowLeft className="h-8 w-8 text-emerald-600 rotate-180" />
-                </button>
+                <div className="flex justify-between mt-4">
+                  <button className="p-2 rounded-full bg-white shadow-md hover:bg-gray-50">
+                    <ArrowLeft className="h-6 w-6 text-emerald-600" />
+                  </button>
+                  <button className="p-2 rounded-full bg-white shadow-md hover:bg-gray-50">
+                    <ArrowLeft className="h-6 w-6 text-emerald-600 rotate-180" />
+                  </button>
+                </div>
               </div>
               <p className="text-center text-gray-700 max-w-2xl mx-auto">
                 {featuredMeal.description}
