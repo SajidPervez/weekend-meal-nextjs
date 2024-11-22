@@ -4,10 +4,11 @@
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { v4 as uuidv4 } from 'uuid';
+import type { MealFormData } from '@/types/meal';
 
 interface MealFormProps {
-  onSubmit: (data: any) => void;
-  initialData?: any;
+  onSubmit: (data: MealFormData) => void;
+  initialData?: Partial<MealFormData>;
 }
 
 export default function MealForm({ onSubmit, initialData }: MealFormProps) {
@@ -55,7 +56,7 @@ export default function MealForm({ onSubmit, initialData }: MealFormProps) {
         const fileName = `${uuidv4()}.${fileExt}`;
         const filePath = `meal-images/${fileName}`;
 
-        const { error: uploadError, data } = await supabase.storage
+        const { error: uploadError } = await supabase.storage
           .from('meal-images')
           .upload(filePath, image);
 
@@ -68,15 +69,18 @@ export default function MealForm({ onSubmit, initialData }: MealFormProps) {
         imageUrls.push(publicUrl);
       }
 
-      const mealData = {
-        title: formData.get('title'),
-        description: formData.get('description'),
+      const mealData: MealFormData = {
+        title: formData.get('title') as string,
+        description: formData.get('description') as string,
         price: parseFloat(formData.get('price') as string),
         available_quantity: parseInt(formData.get('available_quantity') as string),
-        date_available: formData.get('date_available'),
-        time_available: formData.get('time_available'),
-        size: formData.get('size'),
+        date_available: formData.get('date_available') as string,
+        time_available: formData.get('time_available') as string,
+        size: formData.get('size') as string,
         image_urls: imageUrls,
+        available_for: null,
+        availability_date: null,
+        recurring_pattern: null,
       };
 
       await onSubmit(mealData);
