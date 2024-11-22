@@ -1,12 +1,22 @@
 'use client';
 
 import React, { useEffect, useState } from 'react'
-import { Button } from "@/components/ui/button"
-import { Utensils, Search, MapPin, Menu } from "lucide-react"
+import { Utensils, Search, MapPin, Menu, ArrowLeft } from "lucide-react"
 import Link from "next/link"
+import Image from "next/image"
 import { supabase } from '@/lib/supabase';
 import type { Meal } from '@/types/meal';
 import MealCard from '@/components/ui/MealCard';
+
+// Define the Meal type if not already defined in @/types/meal
+interface Meal {
+  id: string;
+  name: string;
+  description: string;
+  image_url: string;
+  date_available: string;
+  price: number;
+}
 
 export default function HomePage() {
   const [meals, setMeals] = useState<Meal[]>([]);
@@ -78,11 +88,15 @@ export default function HomePage() {
                 {featuredMeal.name}
               </h1>
               <div className="relative w-full aspect-square max-w-2xl mx-auto mb-8">
-                <img
-                  src={featuredMeal.image_url}
-                  alt={featuredMeal.name}
-                  className="w-full h-full object-contain"
-                />
+                <div className="relative w-full h-full">
+                  <Image
+                    src={featuredMeal.image_url}
+                    alt={featuredMeal.name}
+                    fill
+                    className="object-contain"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  />
+                </div>
                 <button className="absolute left-4 top-1/2 transform -translate-y-1/2">
                   <ArrowLeft className="h-8 w-8 text-emerald-600" />
                 </button>
