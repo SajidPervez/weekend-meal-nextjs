@@ -1,209 +1,237 @@
 // components/MealForm.tsx
 'use client';
 
-import { useState, useEffect } from 'react';
-import { MealFormData } from '@/types/meal';
-import { Button } from './button';
+import { useState } from 'react';
+import { supabase } from '@/lib/supabase';
+import { v4 as uuidv4 } from 'uuid';
 
 interface MealFormProps {
-  initialMeal: MealFormData | null;
-  onSubmit: (data: Partial<MealFormData>, imageFile: File | null) => void;
+  onSubmit: (data: any) => void;
+  initialData?: any;
 }
 
-export default function MealForm({ initialMeal, onSubmit }: MealFormProps) {
-  const [formData, setFormData] = useState<Partial<MealFormData>>({
-    title: '',
-    description: '',
-    price: '',
-    available_quantity: '',
-    date_available: '',
-    time_available: '',
-    size: '',
-    available_for: null,
-    availability_date: '',
-    recurring_pattern: null,
-  });
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-
-  // Populate form with initial data when editing
-  useEffect(() => {
-    if (initialMeal) {
-      setFormData({
-        title: initialMeal.title || '',
-        description: initialMeal.description || '',
-        price: initialMeal.price || '',
-        available_quantity: initialMeal.available_quantity || '',
-        date_available: initialMeal.date_available || '',
-        time_available: initialMeal.time_available || '',
-        size: initialMeal.size || '',
-        available_for: initialMeal.available_for || null,
-        availability_date: initialMeal.availability_date || '',
-        recurring_pattern: initialMeal.recurring_pattern || null,
-      });
-      
-      if (initialMeal.main_image_url) {
-        setPreviewUrl(initialMeal.main_image_url);
-      }
-    }
-  }, [initialMeal]);
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
+export default function MealForm({ onSubmit, initialData }: MealFormProps) {
+  const [uploading, setUploading] = useState(false);
+  const [images, setImages] = useState<File[]>([]);
+  const [previewUrls, setPreviewUrls] = useState<string[]>(
+    initialData?.image_urls || []
+  );
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setImageFile(file);
-      const url = URL.createObjectURL(file);
-      setPreviewUrl(url);
+    const files = Array.from(e.target.files || []);
+    if (files.length + previewUrls.length > 3) {
+      alert('Maximum 3 images allowed');
+      return;
     }
+    
+    setImages(prevImages => [...prevImages, ...files]);
+    
+    // Create preview URLs for new images
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewUrls(prev => [...prev, reader.result as string]);
+      };
+      reader.readAsDataURL(file);
+    });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const removeImage = (index: number) => {
+    setPreviewUrls(prev => prev.filter((_, i) => i !== index));
+    setImages(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    onSubmit(formData, imageFile);
+    setUploading(true);
+
+    try {
+      const formData = new FormData(e.currentTarget);
+      const imageUrls: string[] = [...previewUrls];
+
+      // Upload new images
+      for (const image of images) {
+        const fileExt = image.name.split('.').pop();
+        const fileName = `${uuidv4()}.${fileExt}`;
+        const filePath = `meal-images/${fileName}`;
+
+        const { error: uploadError, data } = await supabase.storage
+          .from('meal-images')
+          .upload(filePath, image);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('meal-images')
+          .getPublicUrl(filePath);
+
+        imageUrls.push(publicUrl);
+      }
+
+      const mealData = {
+        title: formData.get('title'),
+        description: formData.get('description'),
+        price: parseFloat(formData.get('price') as string),
+        available_quantity: parseInt(formData.get('available_quantity') as string),
+        date_available: formData.get('date_available'),
+        time_available: formData.get('time_available'),
+        size: formData.get('size'),
+        image_urls: imageUrls,
+      };
+
+      await onSubmit(mealData);
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Error uploading images');
+    } finally {
+      setUploading(false);
+    }
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="space-y-4">
-        <div>
-          <label htmlFor="title" className="block text-sm font-medium text-gray-700">
-            Title *
-          </label>
+      <div>
+        <label className="block text-sm font-medium text-gray-700">
+          Images (Max 3)
+        </label>
+        <div className="mt-1 flex flex-col space-y-4">
           <input
-            type="text"
-            id="title"
-            name="title"
-            value={formData.title}
-            onChange={handleInputChange}
-            required
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
+            type="file"
+            accept="image/*"
+            onChange={handleImageChange}
+            multiple
+            className="block w-full text-sm text-gray-500
+              file:mr-4 file:py-2 file:px-4
+              file:rounded-full file:border-0
+              file:text-sm file:font-semibold
+              file:bg-emerald-50 file:text-emerald-700
+              hover:file:bg-emerald-100"
+            disabled={previewUrls.length >= 3}
           />
+          <div className="flex gap-4 flex-wrap">
+            {previewUrls.map((url, index) => (
+              <div key={index} className="relative">
+                <img
+                  src={url}
+                  alt={`Preview ${index + 1}`}
+                  className="w-24 h-24 object-cover rounded"
+                />
+                <button
+                  type="button"
+                  onClick={() => removeImage(index)}
+                  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center"
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+          </div>
         </div>
+      </div>
 
-        <div>
-          <label htmlFor="description" className="block text-sm font-medium text-gray-700">
-            Description
-          </label>
-          <textarea
-            id="description"
-            name="description"
-            value={formData.description || ''}
-            onChange={handleInputChange}
-            rows={3}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
-          />
-        </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700">
+          Title
+        </label>
+        <input
+          type="text"
+          name="title"
+          defaultValue={initialData?.title}
+          required
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500"
+        />
+      </div>
 
+      <div>
+        <label className="block text-sm font-medium text-gray-700">
+          Description
+        </label>
+        <textarea
+          name="description"
+          defaultValue={initialData?.description}
+          rows={3}
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500"
+        />
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
         <div>
-          <label htmlFor="price" className="block text-sm font-medium text-gray-700">
-            Price *
+          <label className="block text-sm font-medium text-gray-700">
+            Price
           </label>
           <input
             type="number"
-            id="price"
             name="price"
-            value={formData.price}
-            onChange={handleInputChange}
-            required
+            defaultValue={initialData?.price}
             step="0.01"
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
+            required
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500"
           />
         </div>
 
         <div>
-          <label htmlFor="available_quantity" className="block text-sm font-medium text-gray-700">
-            Available Quantity *
+          <label className="block text-sm font-medium text-gray-700">
+            Available Quantity
           </label>
           <input
             type="number"
-            id="available_quantity"
             name="available_quantity"
-            value={formData.available_quantity}
-            onChange={handleInputChange}
+            defaultValue={initialData?.available_quantity}
             required
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500"
           />
         </div>
+      </div>
 
+      <div className="grid grid-cols-2 gap-4">
         <div>
-          <label htmlFor="date_available" className="block text-sm font-medium text-gray-700">
-            Date Available *
+          <label className="block text-sm font-medium text-gray-700">
+            Date Available
           </label>
           <input
             type="date"
-            id="date_available"
             name="date_available"
-            value={formData.date_available}
-            onChange={handleInputChange}
+            defaultValue={initialData?.date_available}
             required
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500"
           />
         </div>
 
         <div>
-          <label htmlFor="time_available" className="block text-sm font-medium text-gray-700">
-            Time Available *
+          <label className="block text-sm font-medium text-gray-700">
+            Time Available
           </label>
           <select
-            id="time_available"
             name="time_available"
-            value={formData.time_available}
-            onChange={handleInputChange}
+            defaultValue={initialData?.time_available}
             required
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500"
           >
-            <option value="">Select time</option>
             <option value="lunch">Lunch</option>
             <option value="dinner">Dinner</option>
           </select>
         </div>
-
-        <div>
-          <label htmlFor="size" className="block text-sm font-medium text-gray-700">
-            Size
-          </label>
-          <input
-            type="text"
-            id="size"
-            name="size"
-            value={formData.size || ''}
-            onChange={handleInputChange}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
-          />
-        </div>
-
-        <div>
-          <label htmlFor="image" className="block text-sm font-medium text-gray-700">
-            Image
-          </label>
-          <input
-            type="file"
-            id="image"
-            accept="image/*"
-            onChange={handleImageChange}
-            className="mt-1 block w-full"
-          />
-          {previewUrl && (
-            <img 
-              src={previewUrl} 
-              alt="Preview" 
-              className="mt-2 h-32 w-32 object-cover rounded-md"
-            />
-          )}
-        </div>
       </div>
 
-      <Button type="submit" className="w-full">
-        {initialMeal ? 'Update Meal' : 'Create Meal'}
-      </Button>
+      <div>
+        <label className="block text-sm font-medium text-gray-700">
+          Size
+        </label>
+        <input
+          type="text"
+          name="size"
+          defaultValue={initialData?.size}
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500"
+        />
+      </div>
+
+      <button
+        type="submit"
+        disabled={uploading}
+        className="w-full bg-emerald-600 text-white py-2 px-4 rounded-md hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:opacity-50"
+      >
+        {uploading ? 'Uploading...' : 'Submit'}
+      </button>
     </form>
   );
 }

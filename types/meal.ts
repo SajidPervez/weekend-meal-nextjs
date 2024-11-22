@@ -22,7 +22,7 @@ export interface MealFormData {
   id?: string;
   title: string;
   description: string | null;
-  main_image_url: string | null;
+  image_urls: string[];
   price: string | number;
   available_quantity: string | number;
   date_available: string;
