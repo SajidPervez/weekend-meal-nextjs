@@ -93,6 +93,24 @@ export default function AdminMealsPage() {
     await fetchMeals();
   };
 
+  // Convert Meal to MealFormData
+  const convertMealToFormData = (meal: Meal): Partial<MealFormData> => {
+    return {
+      id: meal.id.toString(), // Convert number to string
+      title: meal.title,
+      description: meal.description,
+      image_urls: meal.image_urls,
+      price: meal.price,
+      available_quantity: meal.available_quantity,
+      date_available: meal.date_available,
+      time_available: meal.time_available,
+      size: meal.size,
+      available_for: meal.available_for ? meal.available_for.join(',') : null,
+      availability_date: meal.availability_date,
+      recurring_pattern: meal.recurring_pattern ? JSON.stringify(meal.recurring_pattern) : null,
+    };
+  };
+
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">
@@ -101,7 +119,7 @@ export default function AdminMealsPage() {
       
       <MealForm 
         onSubmit={handleSubmit}
-        initialData={editingMeal || undefined}
+        initialData={editingMeal ? convertMealToFormData(editingMeal) : undefined}
       />
 
       <div className="mt-8">
