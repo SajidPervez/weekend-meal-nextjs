@@ -71,7 +71,7 @@ export default function HomePage() {
         </div>
       </header>
       <main className="flex-1 pt-14">
-        {featuredMeal && (featuredMeal.main_image_url || featuredMeal.image_url) && (
+        {featuredMeal && featuredMeal.main_image_url && (
           <section className="w-full py-12 px-4">
             <div className="container mx-auto max-w-4xl">
               <h1 className="text-4xl md:text-6xl font-bold text-center mb-8">
@@ -80,7 +80,7 @@ export default function HomePage() {
               <div className="relative w-full aspect-square max-w-2xl mx-auto mb-8">
                 <div className="relative w-full h-full">
                   <Image
-                    src={featuredMeal.main_image_url || featuredMeal.image_url}
+                    src={featuredMeal.main_image_url}
                     alt={featuredMeal.title || 'Featured meal'}
                     fill
                     className="object-contain"
