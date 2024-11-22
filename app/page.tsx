@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, Search, MapPin, Menu } from "lucide-react"
+import { Utensils, Search, MapPin, Menu } from "lucide-react"
 import Link from "next/link"
 import { supabase } from '@/lib/supabase';
 import type { Meal } from '@/types/meal';
@@ -10,6 +10,7 @@ import MealCard from '@/components/ui/MealCard';
 
 export default function HomePage() {
   const [meals, setMeals] = useState<Meal[]>([]);
+  const [featuredMeal, setFeaturedMeal] = useState<Meal | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -28,7 +29,13 @@ export default function HomePage() {
 
       if (error) throw error;
       
-      setMeals(data || []);
+      // Set the first meal as featured meal
+      if (data && data.length > 0) {
+        setFeaturedMeal(data[0]);
+        setMeals(data.slice(1)); // Set remaining meals
+      } else {
+        setMeals([]);
+      }
     } catch (error) {
       console.error('Error fetching meals:', error);
     } finally {
@@ -47,9 +54,9 @@ export default function HomePage() {
   return (
     <div className="flex flex-col min-h-screen">
       <header className="px-4 lg:px-6 h-14 flex items-center justify-between bg-white fixed w-full z-10 border-b">
-        <Link href="/menu" className="flex items-center text-yellow-500">
-          <ArrowLeft className="h-5 w-5 mr-2" />
-          <span className="text-sm">Back to Full Menu</span>
+        <Link href="/" className="flex items-center text-emerald-600">
+          <Utensils className="h-6 w-6" />
+          <span className="ml-2 text-xl font-bold">Tasty Bites</span>
         </Link>
         <div className="flex items-center gap-4">
           <button aria-label="Search">
@@ -64,35 +71,31 @@ export default function HomePage() {
         </div>
       </header>
       <main className="flex-1 pt-14">
-        <section className="w-full py-12 px-4">
-          <div className="container mx-auto max-w-4xl">
-            <h1 className="text-4xl md:text-6xl font-bold text-center mb-8">
-              Big Mac®
-            </h1>
-            <div className="relative w-full aspect-square max-w-2xl mx-auto mb-8">
-              <img
-                src="/images/big-mac.png"
-                alt="Big Mac"
-                className="w-full h-full object-contain"
-              />
-              <button className="absolute left-4 top-1/2 transform -translate-y-1/2">
-                <ArrowLeft className="h-8 w-8 text-yellow-500" />
-              </button>
-              <button className="absolute right-4 top-1/2 transform -translate-y-1/2">
-                <ArrowLeft className="h-8 w-8 text-yellow-500 rotate-180" />
-              </button>
+        {featuredMeal && (
+          <section className="w-full py-12 px-4">
+            <div className="container mx-auto max-w-4xl">
+              <h1 className="text-4xl md:text-6xl font-bold text-center mb-8">
+                {featuredMeal.name}
+              </h1>
+              <div className="relative w-full aspect-square max-w-2xl mx-auto mb-8">
+                <img
+                  src={featuredMeal.image_url}
+                  alt={featuredMeal.name}
+                  className="w-full h-full object-contain"
+                />
+                <button className="absolute left-4 top-1/2 transform -translate-y-1/2">
+                  <ArrowLeft className="h-8 w-8 text-emerald-600" />
+                </button>
+                <button className="absolute right-4 top-1/2 transform -translate-y-1/2">
+                  <ArrowLeft className="h-8 w-8 text-emerald-600 rotate-180" />
+                </button>
+              </div>
+              <p className="text-center text-gray-700 max-w-2xl mx-auto">
+                {featuredMeal.description}
+              </p>
             </div>
-            <div className="flex justify-center gap-4 mb-8">
-              <img src="/images/mymaccas-logo.png" alt="MyMaccas" className="h-12" />
-              <img src="/images/mcdelivery-logo.png" alt="McDelivery" className="h-12" />
-            </div>
-            <p className="text-center text-gray-700 max-w-2xl mx-auto">
-              It starts with two 100% Aussie beef patties. Then comes the delicious combination of
-              crisp iceberg lettuce, melting signature cheese, onions and pickles, between a toasted
-              sesame seed bun. And don&apos;t forget the McDonald&apos;s special sauce!
-            </p>
-          </div>
-        </section>
+          </section>
+        )}
 
         <section className="w-full py-12 bg-gray-50">
           <div className="container mx-auto px-4">
@@ -101,14 +104,6 @@ export default function HomePage() {
               {meals.map((meal) => (
                 <div key={meal.id} className="bg-white rounded-lg shadow-md overflow-hidden">
                   <MealCard meal={meal} />
-                  <div className="p-4">
-                    <Button 
-                      className="w-full bg-yellow-500 hover:bg-yellow-600 text-black"
-                      onClick={() => console.log(`Order ${meal.id}`)}
-                    >
-                      Order Now
-                    </Button>
-                  </div>
                 </div>
               ))}
             </div>
