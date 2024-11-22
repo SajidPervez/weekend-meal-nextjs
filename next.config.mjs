@@ -7,6 +7,15 @@ const nextConfig = {
         }
         return config
     },
+    images: {
+        remotePatterns: [
+            {
+                protocol: 'https',
+                hostname: 'yawmoopfkvsklcfailyf.supabase.co',
+                pathname: '/storage/v1/object/public/**',
+            },
+        ],
+    },
 };
 
 export default nextConfig;
