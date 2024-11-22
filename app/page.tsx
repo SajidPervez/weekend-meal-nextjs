@@ -91,7 +91,7 @@ export default function HomePage() {
                       alt={featuredMeal.title}
                       fill
                       className="object-contain"
-                      onError={(e) => {
+                      onError={() => {
                         console.error('Image failed to load:', featuredMeal.main_image_url);
                       }}
                     />
