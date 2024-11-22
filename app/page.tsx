@@ -86,13 +86,13 @@ export default function HomePage() {
               <div className="w-full max-w-2xl mx-auto mb-8">
                 <div className="relative w-full h-[500px]">
                   {featuredMeal.main_image_url && (
-                    <img
+                    <Image
                       src={featuredMeal.main_image_url}
                       alt={featuredMeal.title}
-                      className="w-full h-full object-contain"
+                      fill
+                      className="object-contain"
                       onError={(e) => {
                         console.error('Image failed to load:', featuredMeal.main_image_url);
-                        e.currentTarget.src = '/images/default-meal.jpg';
                       }}
                     />
                   )}
