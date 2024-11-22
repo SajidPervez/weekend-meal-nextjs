@@ -10,7 +10,6 @@ import { Meal } from '@/types/meal';
 export default function AdminDashboard() {
   const [meals, setMeals] = useState<Meal[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [editingMeal, setEditingMeal] = useState<Meal | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -63,10 +62,7 @@ export default function AdminDashboard() {
   };
 
   const handleEdit = (id: number) => {
-    const meal = meals.find(m => m.id === id);
-    if (meal) {
-      router.push(`/admin/meals?edit=${id}`);
-    }
+    router.push(`/admin/meals?edit=${id}`);
   };
 
   if (isLoading) {
