@@ -17,6 +17,12 @@ export default function HomePage() {
     fetchMeals();
   }, []);
 
+  useEffect(() => {
+    if (featuredMeal) {
+      console.log('Featured Meal Data:', featuredMeal);
+    }
+  }, [featuredMeal]);
+
   const fetchMeals = async () => {
     try {
       const today = new Date().toISOString().split('T')[0];
@@ -71,22 +77,39 @@ export default function HomePage() {
         </div>
       </header>
       <main className="flex-1 pt-14">
-        {featuredMeal && featuredMeal.main_image_url && (
+        {featuredMeal ? (
           <section className="w-full py-12 px-4">
             <div className="container mx-auto max-w-4xl">
+              <div className="bg-gray-100 p-4 mb-4 rounded-lg">
+                <p>Debug Info:</p>
+                <p>Title: {featuredMeal.title}</p>
+                <p>Image URL: {featuredMeal.main_image_url}</p>
+              </div>
+
               <h1 className="text-4xl md:text-6xl font-bold text-center mb-8">
                 {featuredMeal.title}
               </h1>
               <div className="relative w-full aspect-square max-w-2xl mx-auto mb-8">
-                <div className="relative w-full h-full">
-                  <Image
-                    src={featuredMeal.main_image_url}
-                    alt={featuredMeal.title || 'Featured meal'}
-                    fill
-                    className="object-contain"
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                    priority
-                  />
+                <div className="relative w-full h-full bg-gray-100">
+                  {featuredMeal.main_image_url ? (
+                    <Image
+                      src={featuredMeal.main_image_url}
+                      alt={featuredMeal.title || 'Featured meal'}
+                      fill
+                      className="object-contain"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      priority
+                      onError={(e) => {
+                        console.error('Image failed to load:', featuredMeal.main_image_url);
+                        // Fallback to a default image or show error state
+                        e.currentTarget.src = '/images/default-meal.jpg';
+                      }}
+                    />
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-center text-gray-500">
+                      No image available
+                    </div>
+                  )}
                 </div>
                 <button className="absolute left-4 top-1/2 transform -translate-y-1/2">
                   <ArrowLeft className="h-8 w-8 text-emerald-600" />
@@ -100,6 +123,10 @@ export default function HomePage() {
               </p>
             </div>
           </section>
+        ) : (
+          <div className="w-full py-12 px-4 text-center">
+            No featured meal available
+          </div>
         )}
 
         <section className="w-full py-12 bg-gray-50">
