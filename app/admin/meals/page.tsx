@@ -1,213 +1,122 @@
 'use client';
 
-import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useEffect, useState, useCallback } from 'react';
-import MealForm from '@/components/ui/MealForm';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { MealFormData } from '@/types/meal';
-import AdminLayout from '@/components/AdminLayout';
+import MealForm from '@/components/ui/MealForm';
+import MealCard from '@/components/ui/MealCard';
+import type { Meal, MealFormData } from '@/types/meal';
 
-function AddMealContent() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const editId = searchParams.get('edit');
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [initialMeal, setInitialMeal] = useState<MealFormData | null>(null);
-
-  const checkAuth = useCallback(async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      router.push('/login');
-      return;
-    }
-    setIsAuthenticated(true);
-  }, [router]);
+export default function AdminMealsPage() {
+  const [meals, setMeals] = useState<Meal[]>([]);
+  const [editingMeal, setEditingMeal] = useState<Meal | null>(null);
 
   useEffect(() => {
-    checkAuth();
-    if (editId) {
-      fetchMealData(editId);
-    }
-  }, [editId, checkAuth]);
+    fetchMeals();
+  }, []);
 
-  const fetchMealData = async (id: string) => {
-    try {
-      const { data, error } = await supabase
+  const fetchMeals = async () => {
+    const { data, error } = await supabase
+      .from('meals')
+      .select('*')
+      .order('date_available', { ascending: true });
+
+    if (error) {
+      console.error('Error fetching meals:', error);
+      return;
+    }
+
+    if (data) {
+      setMeals(data);
+    }
+  };
+
+  const handleEdit = (id: number) => {
+    const meal = meals.find(m => m.id === id);
+    if (meal) {
+      setEditingMeal(meal);
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    if (window.confirm('Are you sure you want to delete this meal?')) {
+      const { error } = await supabase
         .from('meals')
-        .select('*')
-        .eq('id', id)
-        .single();
+        .delete()
+        .eq('id', id);
 
       if (error) {
-        console.error('Error fetching meal:', error);
+        console.error('Error deleting meal:', error);
         return;
       }
 
-      if (data) {
-        // Transform the data to match MealFormData structure
-        const formData: MealFormData = {
-          id: data.id,
-          title: data.title,
-          description: data.description,
-          main_image_url: data.main_image_url,
-          price: data.price,
-          available_quantity: data.available_quantity,
-          date_available: data.date_available,
-          time_available: data.time_available,
-          size: data.size,
-          available_for: data.available_for?.[0] || null,
-          availability_date: data.availability_date,
-          recurring_pattern: data.recurring_pattern?.type || null
-        };
-        setInitialMeal(formData);
-      }
-    } catch (error) {
-      console.error('Error fetching meal data:', error);
+      await fetchMeals();
     }
   };
 
-  const handleMealSubmit = async (mealData: Partial<MealFormData>, imageFile: File | null) => {
-    try {
-      // Check if user is authenticated
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        console.error('User not authenticated');
-        router.push('/login');
+  const handleSubmit = async (data: MealFormData) => {
+    const mealData = {
+      title: data.title,
+      description: data.description,
+      image_urls: data.image_urls,  // Updated to use image_urls
+      price: data.price,
+      available_quantity: data.available_quantity,
+      date_available: data.date_available,
+      time_available: data.time_available,
+      size: data.size,
+      available_for: data.available_for,
+      availability_date: data.availability_date,
+      recurring_pattern: data.recurring_pattern,
+    };
+
+    if (editingMeal) {
+      const { error } = await supabase
+        .from('meals')
+        .update(mealData)
+        .eq('id', editingMeal.id);
+
+      if (error) {
+        console.error('Error updating meal:', error);
         return;
       }
+    } else {
+      const { error } = await supabase
+        .from('meals')
+        .insert([mealData]);
 
-      // Initialize imageUrl with the existing image URL if we're editing
-      let imageUrl = editId ? initialMeal?.main_image_url : null;
-
-      if (imageFile) {
-        try {
-          // Upload image to Supabase storage
-          const fileExt = imageFile.name.split('.').pop();
-          const fileName = `${Date.now()}.${fileExt}`;
-          const filePath = `${fileName}`;
-
-          console.log('Uploading file:', filePath);
-
-          // Upload new image
-          const { error: uploadError } = await supabase.storage
-            .from('meal-images')
-            .upload(filePath, imageFile, {
-              cacheControl: '3600',
-              upsert: true,
-              contentType: imageFile.type
-            });
-
-          if (uploadError) {
-            console.error('Error uploading image:', uploadError);
-            throw uploadError;
-          }
-
-          // Get the public URL for the uploaded image
-          const { data } = supabase.storage
-            .from('meal-images')
-            .getPublicUrl(filePath);
-
-          if (data) {
-            imageUrl = data.publicUrl;
-            console.log('Image uploaded successfully:', imageUrl);
-          } else {
-            throw new Error('Failed to get public URL for uploaded image');
-          }
-
-          // If editing and there's an existing image, delete it after successful upload
-          if (editId && initialMeal?.main_image_url) {
-            const oldImagePath = initialMeal.main_image_url.split('/').pop();
-            if (oldImagePath) {
-              await supabase.storage
-                .from('meal-images')
-                .remove([oldImagePath]);
-            }
-          }
-        } catch (uploadError) {
-          console.error('Error handling image:', uploadError);
-          throw uploadError;
-        }
-      }
-
-      // Validate required fields
-      if (!mealData.title || !mealData.date_available || !mealData.time_available) {
-        console.error('Required fields missing');
+      if (error) {
+        console.error('Error creating meal:', error);
         return;
       }
-
-      const mealPayload = {
-        title: mealData.title,
-        description: mealData.description || null,
-        main_image_url: imageUrl,
-        price: parseFloat(mealData.price?.toString() || '0'),
-        available_quantity: parseInt(mealData.available_quantity?.toString() || '0'),
-        date_available: new Date(mealData.date_available).toISOString().split('T')[0],
-        time_available: mealData.time_available,
-        size: mealData.size || null,
-        available_for: ['lunch', 'dinner'],
-        availability_date: mealData.availability_date 
-          ? new Date(mealData.availability_date).toISOString().split('T')[0]
-          : null,
-        recurring_pattern: {
-          type: 'none',
-          days: []
-        }
-      };
-
-      console.log('Final meal payload with image:', mealPayload);
-
-      if (editId) {
-        const { error: updateError } = await supabase
-          .from('meals')
-          .update(mealPayload)
-          .eq('id', editId);
-
-        if (updateError) {
-          console.error('Error updating meal:', updateError);
-          return;
-        }
-      } else {
-        const { error: insertError } = await supabase
-          .from('meals')
-          .insert([mealPayload]);
-
-        if (insertError) {
-          console.error('Error creating meal:', insertError);
-          return;
-        }
-      }
-
-      router.push('/admin');
-    } catch (error) {
-      console.error('Error handling meal submission:', error);
-      throw error;
     }
-  };
 
-  if (!isAuthenticated) {
-    return <div>Loading...</div>;
-  }
+    setEditingMeal(null);
+    await fetchMeals();
+  };
 
   return (
-    <AdminLayout>
-      <div className="p-8">
-        <h1 className="text-2xl font-bold mb-4">
-          {editId ? 'Edit Meal' : 'Add New Meal'}
-        </h1>
+    <div className="container mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-4">
+        {editingMeal ? 'Edit Meal' : 'Add New Meal'}
+      </h1>
+      
+      <MealForm 
+        onSubmit={handleSubmit}
+        initialData={editingMeal || undefined}
+      />
 
-        <MealForm 
-          initialMeal={initialMeal}
-          onSubmit={handleMealSubmit} 
-        />
+      <div className="mt-8">
+        <h2 className="text-xl font-bold mb-4">Existing Meals</h2>
+        <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+          {meals.map((meal) => (
+            <MealCard
+              key={meal.id}
+              meal={meal}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+            />
+          ))}
+        </div>
       </div>
-    </AdminLayout>
-  );
-}
-
-export default function AddMeal() {
-  return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <AddMealContent />
-    </Suspense>
+    </div>
   );
 }
