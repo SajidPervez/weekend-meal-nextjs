@@ -109,29 +109,29 @@ export default function BookingForm({ meal }: BookingFormProps) {
     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
       {/* Left side - Image and Meal Details */}
       <div className="rounded-lg overflow-hidden border border-gray-200">
-        {meal.main_image_url && !imageError && (
+        {meal.image_urls?.[0] && !imageError && (
           <div className="relative h-96 w-full">
             <img
-              src={meal.main_image_url}
+              src={meal.image_urls[0]}
               alt={meal.title}
               className="w-full h-full object-cover"
               onError={() => setImageError(true)}
             />
           </div>
         )}
-        <div className="p-6 bg-gray-50">
-          <h2 className="text-2xl font-bold mb-2">{meal.title}</h2>
-          {meal.description && (
-            <p className="text-gray-600 mb-4">{meal.description}</p>
-          )}
-          <div className="space-y-2 text-sm text-gray-600">
-            <p>Available Quantity: {meal.available_quantity}</p>
-            <p>Size: {meal.size}</p>
-            <p>Pick-up Date: {new Date(meal.date_available).toLocaleDateString()}</p>
-            <p>Pick-up Time: {meal.time_available}</p>
+        {(!meal.image_urls?.[0] || imageError) && (
+          <div className="h-96 w-full flex items-center justify-center bg-gray-100">
+            <span className="text-gray-400">No image available</span>
           </div>
-          <div className="mt-4 text-2xl font-semibold text-emerald-600">
-            ${meal.price.toFixed(2)}
+        )}
+        <div className="p-6">
+          <h2 className="text-2xl font-bold mb-4">{meal.title}</h2>
+          <p className="text-gray-600 mb-4">{meal.description}</p>
+          <div className="space-y-2">
+            <p><strong>Price:</strong> ${meal.price.toFixed(2)}</p>
+            <p><strong>Available:</strong> {meal.available_quantity}</p>
+            <p><strong>Pick-up:</strong> {meal.time_available}</p>
+            {meal.size && <p><strong>Size:</strong> {meal.size}</p>}
           </div>
         </div>
       </div>
