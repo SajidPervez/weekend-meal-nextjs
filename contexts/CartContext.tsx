@@ -47,7 +47,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       )
     );
   };
-
+ 
   const clearCart = () => {
     setItems([]);
   };
