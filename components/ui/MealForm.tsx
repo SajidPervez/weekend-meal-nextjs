@@ -152,7 +152,7 @@ export default function MealForm({ onSubmit, initialData }: MealFormProps) {
         </label>
         <textarea
           name="description"
-          defaultValue={initialData?.description}
+          defaultValue={initialData?.description ?? ''}
           rows={3}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500"
         />
@@ -224,7 +224,7 @@ export default function MealForm({ onSubmit, initialData }: MealFormProps) {
         <input
           type="text"
           name="size"
-          defaultValue={initialData?.size}
+          defaultValue={initialData?.size ?? ''}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500"
         />
       </div>
