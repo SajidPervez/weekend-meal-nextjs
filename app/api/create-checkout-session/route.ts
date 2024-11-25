@@ -1,5 +1,12 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
+import { CartItem } from '@/contexts/CartContext';
+
+interface CheckoutBody {
+  items: CartItem[];
+  customerEmail: string;
+  customerPhone: string;
+}
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2023-10-16',
@@ -7,12 +14,12 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
+    const body = await req.json() as CheckoutBody;
     const { items, customerEmail, customerPhone } = body;
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
-      line_items: items.map((item: any) => ({
+      line_items: items.map((item) => ({
         price_data: {
           currency: 'usd',
           product_data: {

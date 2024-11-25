@@ -18,7 +18,7 @@ export default function SuccessPage() {
         <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
         <h1 className="text-2xl font-bold mb-4">Thank You for Your Order!</h1>
         <p className="text-gray-600 mb-8">
-          We've received your order and will send you a confirmation email shortly.
+          We&apos;ve received your order and will send you a confirmation email shortly.
         </p>
         <Link
           href="/"
