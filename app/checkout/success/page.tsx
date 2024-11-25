@@ -2,15 +2,20 @@
 
 import { useEffect } from 'react';
 import { useCart } from '@/contexts/CartContext';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { CheckCircle } from 'lucide-react';
 
 export default function SuccessPage() {
   const { clearCart } = useCart();
+  const router = useRouter();
 
   useEffect(() => {
     clearCart();
   }, [clearCart]);
+
+  const handleReturnHome = () => {
+    router.push('/');
+  };
 
   return (
     <div className="container mx-auto p-8 text-center">
@@ -20,12 +25,12 @@ export default function SuccessPage() {
         <p className="text-gray-600 mb-8">
           We&apos;ve received your order and will send you a confirmation email shortly.
         </p>
-        <Link
-          href="/"
-          className="inline-block bg-emerald-600 text-white px-6 py-3 rounded-md hover:bg-emerald-700"
+        <button
+          onClick={handleReturnHome}
+          className="inline-block bg-emerald-600 text-white px-6 py-3 rounded-md hover:bg-emerald-700 transition-colors"
         >
           Return to Home
-        </Link>
+        </button>
       </div>
     </div>
   );
