@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState } from 'react';
 import { Meal } from '@/types/meal';
 
-interface CartItem {
+export interface CartItem {
   meal: Meal;
   quantity: number;
 }
