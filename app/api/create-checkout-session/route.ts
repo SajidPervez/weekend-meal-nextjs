@@ -2,20 +2,32 @@ import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { CartItem } from '@/contexts/CartContext';
 
+if (!process.env.STRIPE_SECRET_KEY) {
+  throw new Error('STRIPE_SECRET_KEY is not defined in environment variables');
+}
+
 interface CheckoutBody {
   items: CartItem[];
   customerEmail: string;
   customerPhone: string;
 }
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {  
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: '2024-11-20.acacia',
+  typescript: true,
 });
 
 export async function POST(req: Request) {
   try {
     const body = await req.json() as CheckoutBody;
     const { items, customerEmail, customerPhone } = body;
+
+    if (!items?.length) {
+      return NextResponse.json(
+        { error: 'No items in cart' },
+        { status: 400 }
+      );
+    }
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -24,8 +36,8 @@ export async function POST(req: Request) {
           currency: 'usd',
           product_data: {
             name: item.meal.title,
-            description: item.meal.description,
-            images: item.meal.image_urls,
+            description: item.meal.description || undefined,
+            images: item.meal.image_urls || [],
           },
           unit_amount: Math.round(item.meal.price * 100), // Convert to cents
         },
@@ -39,7 +51,7 @@ export async function POST(req: Request) {
         customerPhone,
       },
       shipping_address_collection: {
-        allowed_countries: ['US', 'CA'], // Adjust as needed
+        allowed_countries: ['US', 'CA'],
       },
     });
 
