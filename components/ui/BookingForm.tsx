@@ -3,8 +3,9 @@
 import { useState } from 'react';
 import { Meal } from "@/types/meal";
 import { useCart } from '@/contexts/CartContext';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Plus } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 interface BookingFormProps {
   meal: Meal;
@@ -13,10 +14,43 @@ interface BookingFormProps {
 export default function BookingForm({ meal }: BookingFormProps) {
   const { addToCart } = useCart();
   const [quantity, setQuantity] = useState(1);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const router = useRouter();
 
   const handleAddToCart = () => {
     addToCart(meal, quantity);
+    setShowSuccess(true);
   };
+
+  const handleAddAnother = () => {
+    addToCart(meal, quantity);
+    router.push('/');
+  };
+
+  if (showSuccess) {
+    return (
+      <div className="container mx-auto p-4">
+        <div className="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md">
+          <h2 className="text-2xl font-bold text-emerald-600 mb-4">Added to Cart!</h2>
+          <div className="space-y-4">
+            <button
+              onClick={() => router.push('/')}
+              className="w-full bg-emerald-600 text-white py-3 px-4 rounded-md hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2"
+            >
+              <Plus className="w-5 h-5" />
+              Add Another Meal
+            </button>
+            <button
+              onClick={() => router.push('/checkout')}
+              className="w-full border border-emerald-600 text-emerald-600 py-3 px-4 rounded-md hover:bg-emerald-50 transition-colors"
+            >
+              Proceed to Checkout
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto p-4">
@@ -86,13 +120,23 @@ export default function BookingForm({ meal }: BookingFormProps) {
             </div>
           </div>
 
-          <button
-            onClick={handleAddToCart}
-            className="w-full bg-emerald-600 text-white py-3 px-4 rounded-md hover:bg-emerald-700 transition-colors"
-            disabled={meal.available_quantity <= 0}
-          >
-            {meal.available_quantity > 0 ? 'Add to Cart' : 'Sold Out'}
-          </button>
+          <div className="space-y-3">
+            <button
+              onClick={handleAddToCart}
+              className="w-full bg-emerald-600 text-white py-3 px-4 rounded-md hover:bg-emerald-700 transition-colors"
+              disabled={meal.available_quantity <= 0}
+            >
+              {meal.available_quantity > 0 ? 'Add to Cart' : 'Sold Out'}
+            </button>
+            <button
+              onClick={handleAddAnother}
+              className="w-full border border-emerald-600 text-emerald-600 py-3 px-4 rounded-md hover:bg-emerald-50 transition-colors flex items-center justify-center gap-2"
+              disabled={meal.available_quantity <= 0}
+            >
+              <Plus className="w-5 h-5" />
+              Add to Cart & Select Another
+            </button>
+          </div>
         </div>
       </div>
     </div>
