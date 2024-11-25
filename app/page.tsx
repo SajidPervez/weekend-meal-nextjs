@@ -32,7 +32,7 @@ export default function HomePage() {
       
       if (data && data.length > 0) {
         setFeaturedMeal(data[0]);
-        setMeals(data); // Now including the featured meal in the grid
+        setMeals(data.slice(1)); // Remove featured meal from the grid
       } else {
         setMeals([]);
       }
@@ -56,6 +56,12 @@ export default function HomePage() {
       setCurrentImageIndex((prev) => 
         prev === featuredMeal.image_urls.length - 1 ? 0 : prev + 1
       );
+    }
+  };
+
+  const handleBookFeatured = () => {
+    if (featuredMeal) {
+      window.location.href = `/book/${featuredMeal.id}`;
     }
   };
 
@@ -88,13 +94,34 @@ export default function HomePage() {
       </header>
       <main className="flex-1 pt-14">
         {featuredMeal ? (
-          <section className="w-full py-12 px-4">
-            <div className="container mx-auto max-w-4xl">
-              <h1 className="text-4xl md:text-6xl font-bold text-center mb-8">
-                {featuredMeal.title}
-              </h1>
-              <div className="w-full max-w-2xl mx-auto mb-8">
-                <div className="relative w-full h-[500px]">
+          <section className="w-full py-12 px-4 bg-gradient-to-b from-white to-gray-50">
+            <div className="container mx-auto max-w-7xl">
+              <div className="grid md:grid-cols-2 gap-8 items-center">
+                {/* Left side - Meal Details */}
+                <div className="space-y-6">
+                  <div className="space-y-4">
+                    <span className="text-emerald-600 font-semibold">Chef Special</span>
+                    <h1 className="text-4xl md:text-6xl font-bold">
+                      {featuredMeal.title}
+                    </h1>
+                    <p className="text-gray-600 text-lg">
+                      {featuredMeal.description}
+                    </p>
+                    <p className="text-3xl font-bold text-emerald-600">
+                      ${featuredMeal.price.toFixed(2)}
+                    </p>
+                  </div>
+                  <button
+                    onClick={handleBookFeatured}
+                    className="bg-emerald-600 text-white px-8 py-3 rounded-full text-lg font-semibold hover:bg-emerald-700 transition-colors"
+                    disabled={featuredMeal.available_quantity <= 0}
+                  >
+                    {featuredMeal.available_quantity > 0 ? 'Book Now' : 'Sold Out'}
+                  </button>
+                </div>
+
+                {/* Right side - Image */}
+                <div className="relative h-[500px] w-full">
                   {featuredMeal.image_urls?.[currentImageIndex] && (
                     <Image
                       src={featuredMeal.image_urls[currentImageIndex]}
@@ -102,33 +129,30 @@ export default function HomePage() {
                       fill
                       priority
                       quality={100}
-                      className="object-contain"
+                      className="object-cover rounded-lg"
                       onError={() => {
                         console.error('Image failed to load:', featuredMeal.image_urls[currentImageIndex]);
                       }}
                     />
                   )}
+                  {featuredMeal.image_urls?.length > 1 && (
+                    <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-4">
+                      <button 
+                        onClick={handlePrevImage}
+                        className="p-2 rounded-full bg-white/80 shadow-md hover:bg-white transition-colors"
+                      >
+                        <ArrowLeft className="h-6 w-6 text-emerald-600" />
+                      </button>
+                      <button 
+                        onClick={handleNextImage}
+                        className="p-2 rounded-full bg-white/80 shadow-md hover:bg-white transition-colors"
+                      >
+                        <ArrowLeft className="h-6 w-6 text-emerald-600 rotate-180" />
+                      </button>
+                    </div>
+                  )}
                 </div>
-                {featuredMeal.image_urls?.length > 1 && (
-                  <div className="flex justify-between mt-4">
-                    <button 
-                      onClick={handlePrevImage}
-                      className="p-2 rounded-full bg-white shadow-md hover:bg-gray-50"
-                    >
-                      <ArrowLeft className="h-6 w-6 text-emerald-600" />
-                    </button>
-                    <button 
-                      onClick={handleNextImage}
-                      className="p-2 rounded-full bg-white shadow-md hover:bg-gray-50"
-                    >
-                      <ArrowLeft className="h-6 w-6 text-emerald-600 rotate-180" />
-                    </button>
-                  </div>
-                )}
               </div>
-              <p className="text-center text-gray-700 max-w-2xl mx-auto">
-                {featuredMeal.description}
-              </p>
             </div>
           </section>
         ) : (
@@ -139,7 +163,7 @@ export default function HomePage() {
 
         <section className="w-full py-12 bg-gray-50">
           <div className="container mx-auto px-4">
-            <h2 className="text-3xl font-bold text-center mb-8">Menu Items</h2>
+            <h2 className="text-3xl font-bold text-center mb-8">More Menu Items</h2>
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {meals.map((meal) => (
                 <div key={meal.id} className="bg-white rounded-lg shadow-md overflow-hidden">
@@ -151,5 +175,5 @@ export default function HomePage() {
         </section>
       </main>
     </div>
-  )
+  );
 }
