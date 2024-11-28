@@ -18,7 +18,7 @@ if [[ $confirm != [yY] ]]; then
 fi
 
 # Add all changes
-echo "Adding changes..."
+echo "Adding changes..."  
 git add .
 
 # Request commit message
