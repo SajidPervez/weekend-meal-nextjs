@@ -76,26 +76,21 @@ export default function HomePage() {
   return (
     <div className="flex flex-col min-h-screen">
       <header className="px-4 lg:px-6 h-14 flex items-center justify-between bg-white fixed w-full z-10 border-b">
-        <Link href="/" className="flex items-center text-emerald-600">
-          <Utensils className="h-6 w-6" />
-          <span className="ml-2 text-xl font-bold">Tasty Bites</span>
+        <Link href="/about" className="flex items-center text-emerald-600">
+          <span className="ml-2 text-xl font-bold">About Us</span>
         </Link>
         <div className="flex items-center gap-4">
-          <button aria-label="Search">
-            <Search className="h-6 w-6" />
-          </button>
           <button aria-label="Location">
             <MapPin className="h-6 w-6" />
           </button>
-          <button aria-label="Menu">
-            <Menu className="h-6 w-6" />
-          </button>
+          <span className="text-sm">19A Jukes Road Fawkner, Victoria 3060 Australia</span>
         </div>
       </header>
       <main className="flex-1 pt-14">
         {featuredMeal ? (
-          <section className="w-full py-12 px-4 bg-gradient-to-b from-white to-gray-50">
-            <div className="container mx-auto max-w-7xl">
+          <section className="w-full py-12 px-4 bg-gradient-to-b from-white to-gray-50 relative">
+            <div className="absolute inset-0 bg-fixed bg-cover bg-center animate-pulse" style={{ backgroundImage: 'url(/path-to-background-image.jpg)' }}></div>
+            <div className="container mx-auto max-w-7xl relative z-10">
               <div className="grid md:grid-cols-2 gap-8 items-center">
                 {/* Left side - Meal Details */}
                 <div className="space-y-6">
@@ -174,6 +169,21 @@ export default function HomePage() {
           </div>
         </section>
       </main>
+      <footer className="bg-gray-800 py-4">
+        <div className="container mx-auto text-center text-white">
+          <div className="flex justify-center space-x-6">
+            <a href="https://facebook.com" aria-label="Facebook" className="hover:text-blue-500">
+              <i className="fab fa-facebook"></i>
+            </a>
+            <a href="https://tiktok.com" aria-label="TikTok" className="hover:text-pink-500">
+              <i className="fab fa-tiktok"></i>
+            </a>
+            <a href="https://instagram.com" aria-label="Instagram" className="hover:text-purple-500">
+              <i className="fab fa-instagram"></i>
+            </a>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
