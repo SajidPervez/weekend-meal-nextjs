@@ -7,7 +7,7 @@ if [[ -z $(git status -s) ]]; then
     exit 0
 fi
 
-# Show current changes
+# Show current changes     
 git status
 
 # Prompt for confirmation to proceed
