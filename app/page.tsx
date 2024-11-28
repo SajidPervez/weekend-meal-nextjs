@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react'
-import { Utensils, Search, MapPin, Menu, ArrowLeft } from "lucide-react"
+import { MapPin, ArrowLeft } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { supabase } from '@/lib/supabase';
