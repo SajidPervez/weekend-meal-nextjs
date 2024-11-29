@@ -46,7 +46,7 @@ export default function MealCard({ meal, onEdit, onDelete }: MealCardProps) {
   };
 
   return (
-    <Card className="w-full">
+    <Card className="w-full overflow-hidden">
       <div className="relative h-3/4 w-full overflow-hidden bg-gray-100">
         {meal.image_urls?.[0] && !imageError && (
           <img
@@ -57,6 +57,7 @@ export default function MealCard({ meal, onEdit, onDelete }: MealCardProps) {
             }`}
             onLoad={handleImageLoad}
             onError={handleImageError}
+            key={meal.image_urls[0]} // Ensure image updates
           />
         )}
         {(!meal.image_urls?.[0] || imageError) && (
