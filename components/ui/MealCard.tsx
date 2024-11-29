@@ -46,18 +46,18 @@ export default function MealCard({ meal, onEdit, onDelete }: MealCardProps) {
   };
 
   return (
-    <Card className="w-full overflow-hidden">
-      <div className="relative h-3/4 w-full overflow-hidden bg-gray-100">
+    <Card className="w-full h-full overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow">
+      <div className="relative aspect-[4/3] w-full overflow-hidden bg-gray-100">
         {meal.image_urls?.[0] && !imageError && (
           <img
             src={meal.image_urls[0]}
             alt={meal.title}
-            className={`w-full h-full object-cover transition-opacity duration-300 ${
-              imageLoaded ? 'opacity-100' : 'opacity-0'
+            className={`w-full h-full object-cover transition-all duration-300 ${
+              imageLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-105'
             }`}
             onLoad={handleImageLoad}
             onError={handleImageError}
-            key={meal.image_urls[0]} // Ensure image updates
+            key={meal.image_urls[0]}
           />
         )}
         {(!meal.image_urls?.[0] || imageError) && (
@@ -67,28 +67,28 @@ export default function MealCard({ meal, onEdit, onDelete }: MealCardProps) {
         )}
       </div>
       <div className="p-4">
-        <div className="flex justify-between items-center mb-2">
-          <h3 className="text-xl font-semibold">{meal.title}</h3>
-          <p className="text-2xl font-bold">${meal.price.toFixed(2)}</p>
+        <div className="flex justify-between items-start gap-2 mb-2">
+          <h3 className="text-lg font-semibold leading-tight">{meal.title}</h3>
+          <p className="text-lg font-bold text-emerald-600">${meal.price.toFixed(2)}</p>
         </div>
-        <p className="text-gray-600 mb-4">{meal.description}</p>
-        <div className="space-y-1 text-gray-600 mb-4">
+        <p className="text-sm text-gray-600 mb-3 line-clamp-2">{meal.description}</p>
+        <div className="space-y-1 text-sm text-gray-600 mb-4">
           <p>Quantity: {meal.available_quantity}</p>
           <p>Date: {new Date(meal.date_available).toLocaleDateString()}</p>
           <p>Pick-up: {meal.time_available}</p>
           {meal.size && <p>Size: {meal.size}</p>}
         </div>
         {onEdit && onDelete ? (
-          <div className="space-x-2">
+          <div className="flex gap-2 mt-auto">
             <button
-              onClick={handleEdit}
-              className="bg-yellow-500 text-white px-2 py-1 rounded hover:bg-yellow-600"
+              onClick={() => onEdit(meal.id)}
+              className="flex-1 bg-emerald-100 text-emerald-700 px-3 py-1.5 rounded-md hover:bg-emerald-200 transition-colors text-sm font-medium"
             >
               Edit
             </button>
             <button
-              onClick={handleDelete}
-              className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
+              onClick={() => onDelete(meal.id)}
+              className="flex-1 bg-red-100 text-red-700 px-3 py-1.5 rounded-md hover:bg-red-200 transition-colors text-sm font-medium"
             >
               Delete
             </button>
@@ -96,10 +96,9 @@ export default function MealCard({ meal, onEdit, onDelete }: MealCardProps) {
         ) : (
           <button
             onClick={handleBookNow}
-            className="w-full bg-emerald-600 text-white py-2 px-4 rounded hover:bg-emerald-700 transition-colors"
-            disabled={meal.available_quantity <= 0}
+            className="w-full bg-emerald-600 text-white px-4 py-2 rounded-md hover:bg-emerald-700 transition-colors"
           >
-            {meal.available_quantity > 0 ? 'Book Now' : 'Sold Out'}
+            Book Now
           </button>
         )}
       </div>

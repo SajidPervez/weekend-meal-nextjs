@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import MealForm from '@/components/ui/MealForm';
 import MealCard from '@/components/ui/MealCard';
-import AdminLayout from '@/components/AdminLayout';
 import type { Meal, MealFormData } from '@/types/meal';
 
 export default function AdminMealsPage() {
@@ -113,31 +112,38 @@ export default function AdminMealsPage() {
   };
 
   return (
-    <AdminLayout>
-      <div className="container mx-auto p-4">
-        <h1 className="text-2xl font-bold mb-4">
-          {editingMeal ? 'Edit Meal' : 'Add New Meal'}
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-2xl font-bold">
+          {editingMeal ? 'Edit Meal' : 'Manage Meals'}
         </h1>
-        
+        {!editingMeal && (
+          <button
+            onClick={() => setEditingMeal({ id: 0 } as Meal)}
+            className="bg-emerald-600 text-white px-4 py-2 rounded-md hover:bg-emerald-700 transition-colors"
+          >
+            Add New Meal
+          </button>
+        )}
+      </div>
+      
+      {editingMeal ? (
         <MealForm 
           onSubmit={handleSubmit}
-          initialData={editingMeal ? convertMealToFormData(editingMeal) : undefined}
+          initialData={convertMealToFormData(editingMeal)}
         />
-
-        <div className="mt-8">
-          <h2 className="text-xl font-bold mb-4">Existing Meals</h2>
-          <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-            {meals.map((meal) => (
-              <MealCard
-                key={meal.id}
-                meal={meal}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-              />
-            ))}
-          </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {meals.map((meal) => (
+            <MealCard
+              key={meal.id}
+              meal={meal}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+            />
+          ))}
         </div>
-      </div>
-    </AdminLayout>
+      )}
+    </div>
   );
 }
