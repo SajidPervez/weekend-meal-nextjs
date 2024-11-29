@@ -27,14 +27,6 @@ export default function MealCard({ meal, onEdit, onDelete }: MealCardProps) {
     router.push(`/book/${meal.id}`);
   };
 
-  const handleEdit = () => {
-    if (onEdit) onEdit(meal.id);
-  };
-
-  const handleDelete = () => {
-    if (onDelete) onDelete(meal.id);
-  };
-
   const handleImageLoad = () => {
     console.log('Image loaded successfully:', meal.image_urls?.[0]);
     setImageLoaded(true);
