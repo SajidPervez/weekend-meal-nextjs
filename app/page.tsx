@@ -75,7 +75,7 @@ export default function HomePage() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <header className="px-4 lg:px-6 h-14 flex items-center justify-between bg-white fixed w-full z-10 border-b">
+      <header className="px-4 lg:px-6 h-14 flex items-center justify-between bg-white border-b">
         <Link href="/" className="flex items-center text-emerald-600">
           <Utensils className="h-6 w-6" />
           <span className="ml-2 text-xl font-bold">Tasty Bites</span>
