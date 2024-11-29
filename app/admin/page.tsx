@@ -13,35 +13,23 @@ export default function AdminDashboard() {
   const router = useRouter();
 
   useEffect(() => {
-    checkAuthAndFetchMeals();
+    fetchMeals();
   }, []);
 
-  const checkAuthAndFetchMeals = async () => {
+  const fetchMeals = async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        router.push('/login');
-        return;
+      const { data, error } = await supabase
+        .from('meals')
+        .select('*')
+        .order('created_at', { ascending: false });
+        
+      if (error) {
+        console.error('Error fetching meals:', error);
+      } else {
+        setMeals(data || []);
       }
-      await fetchMeals();
-    } catch (error) {
-      console.error('Error:', error);
-      router.push('/login');
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const fetchMeals = async () => {
-    const { data, error } = await supabase
-      .from('meals')
-      .select('*')
-      .order('created_at', { ascending: false });
-      
-    if (error) {
-      console.error('Error fetching meals:', error);
-    } else {
-      setMeals(data || []);
     }
   };
 
@@ -66,7 +54,11 @@ export default function AdminDashboard() {
   };
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return (
+      <AdminLayout>
+        <div className="p-8">Loading...</div>
+      </AdminLayout>
+    );
   }
 
   return (
