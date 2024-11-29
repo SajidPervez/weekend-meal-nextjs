@@ -65,6 +65,16 @@ export default function HomePage() {
     }
   };
 
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      weekday: 'short',
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
+    });
+  };
+
   if (loading) {
     return (
       <div className="container mx-auto p-4">
@@ -102,17 +112,36 @@ export default function HomePage() {
                     <p className="text-gray-600 text-lg">
                       {featuredMeal.description}
                     </p>
-                    <p className="text-3xl font-bold text-emerald-600">
-                      ${featuredMeal.price.toFixed(2)}
-                    </p>
+                    <div className="flex flex-col gap-2 text-gray-600">
+                      <p className="flex items-center gap-2">
+                        <span className="font-medium">Available:</span> 
+                        {formatDate(featuredMeal.date_available)}
+                      </p>
+                      <p className="flex items-center gap-2">
+                        <span className="font-medium">Pick-up:</span> 
+                        {featuredMeal.time_available}
+                      </p>
+                      {featuredMeal.size && (
+                        <p className="flex items-center gap-2">
+                          <span className="font-medium">Size:</span> 
+                          {featuredMeal.size}
+                        </p>
+                      )}
+                      <p className="flex items-center gap-2">
+                        <span className="font-medium">Price:</span>
+                        <span className="text-xl font-bold text-emerald-600">
+                          ${featuredMeal.price.toFixed(2)}
+                        </span>
+                      </p>
+                    </div>
+                    <button
+                      onClick={handleBookFeatured}
+                      className="mt-4 bg-emerald-600 text-white px-8 py-3 rounded-md hover:bg-emerald-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                      disabled={featuredMeal.available_quantity <= 0}
+                    >
+                      {featuredMeal.available_quantity > 0 ? 'Book Now' : 'Sold Out'}
+                    </button>
                   </div>
-                  <button
-                    onClick={handleBookFeatured}
-                    className="bg-emerald-600 text-white px-8 py-3 rounded-full text-lg font-semibold hover:bg-emerald-700 transition-colors"
-                    disabled={featuredMeal.available_quantity <= 0}
-                  >
-                    {featuredMeal.available_quantity > 0 ? 'Book Now' : 'Sold Out'}
-                  </button>
                 </div>
 
                 {/* Right side - Image */}

@@ -37,6 +37,16 @@ export default function MealCard({ meal, onEdit, onDelete }: MealCardProps) {
     setImageError(true);
   };
 
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      weekday: 'short', // "Sun"
+      day: '2-digit',   // "08"
+      month: 'short',   // "Nov"
+      year: 'numeric'   // "2024"
+    });
+  };
+
   return (
     <Card className="w-full h-full overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow">
       <div className="relative aspect-[4/3] w-full overflow-hidden bg-gray-100">
@@ -66,7 +76,7 @@ export default function MealCard({ meal, onEdit, onDelete }: MealCardProps) {
         <p className="text-sm text-gray-600 mb-3 line-clamp-2">{meal.description}</p>
         <div className="space-y-1 text-sm text-gray-600 mb-4">
           <p>Quantity: {meal.available_quantity}</p>
-          <p>Date: {new Date(meal.date_available).toLocaleDateString()}</p>
+          <p>Available On: {formatDate(meal.date_available)}</p>
           <p>Pick-up: {meal.time_available}</p>
           {meal.size && <p>Size: {meal.size}</p>}
         </div>

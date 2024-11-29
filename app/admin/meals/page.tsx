@@ -55,43 +55,49 @@ export default function AdminMealsPage() {
   };
 
   const handleSubmit = async (data: MealFormData) => {
-    const mealData = {
-      title: data.title,
-      description: data.description,
-      image_urls: data.image_urls,  // Updated to use image_urls
-      price: data.price,
-      available_quantity: data.available_quantity,
-      date_available: data.date_available,
-      time_available: data.time_available,
-      size: data.size,
-      available_for: data.available_for,
-      availability_date: data.availability_date,
-      recurring_pattern: data.recurring_pattern,
-    };
+    try {
+      const mealData = {
+        title: data.title,
+        description: data.description,
+        image_urls: data.image_urls,
+        price: data.price,
+        available_quantity: data.available_quantity,
+        date_available: data.date_available,
+        time_available: data.time_available,
+        size: data.size,
+        available_for: data.available_for ? data.available_for.split(',') : [],
+        availability_date: data.availability_date,
+        recurring_pattern: data.recurring_pattern ? JSON.parse(data.recurring_pattern) : null,
+      };
 
-    if (editingMeal) {
-      const { error } = await supabase
-        .from('meals')
-        .update(mealData)
-        .eq('id', editingMeal.id);
+      if (editingMeal?.id) {
+        const { error } = await supabase
+          .from('meals')
+          .update(mealData)
+          .eq('id', editingMeal.id);
 
-      if (error) {
-        console.error('Error updating meal:', error);
-        return;
+        if (error) {
+          console.error('Error updating meal:', error);
+          throw error;
+        }
+      } else {
+        const { error } = await supabase
+          .from('meals')
+          .insert([mealData]);
+
+        if (error) {
+          console.error('Error creating meal:', error);
+          throw error;
+        }
       }
-    } else {
-      const { error } = await supabase
-        .from('meals')
-        .insert([mealData]);
 
-      if (error) {
-        console.error('Error creating meal:', error);
-        return;
-      }
+      // Reset form and refresh meals list
+      setEditingMeal(null);
+      await fetchMeals();
+    } catch (error) {
+      console.error('Error saving meal:', error);
+      alert('Failed to save meal. Please try again.');
     }
-
-    setEditingMeal(null);
-    await fetchMeals();
   };
 
   // Convert Meal to MealFormData
