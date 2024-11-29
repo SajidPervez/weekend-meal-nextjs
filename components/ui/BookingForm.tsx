@@ -17,6 +17,16 @@ export default function BookingForm({ meal }: BookingFormProps) {
   const [showSuccess, setShowSuccess] = useState(false);
   const router = useRouter();
 
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      weekday: 'short',
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
+    });
+  };
+
   const handleAddToCart = () => {
     addToCart(meal, quantity);
     setShowSuccess(true);
@@ -64,40 +74,51 @@ export default function BookingForm({ meal }: BookingFormProps) {
         </Link>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Left side - Image and Meal Details */}
-        <div className="rounded-lg overflow-hidden border border-gray-200">
-          {meal.image_urls?.[0] && (
-            <div className="relative h-96 w-full">
-              <img
-                src={meal.image_urls[0]}
-                alt={meal.title}
-                className="w-full h-full object-cover"
-              />
-            </div>
-          )}
-          {!meal.image_urls?.[0] && (
-            <div className="h-96 w-full flex items-center justify-center bg-gray-100">
-              <span className="text-gray-400">No image available</span>
-            </div>
-          )}
-          <div className="p-6">
-            <h2 className="text-2xl font-bold mb-4">{meal.title}</h2>
-            <p className="text-gray-600 mb-4">{meal.description}</p>
-            <div className="space-y-2">
-              <p><strong>Price:</strong> ${meal.price.toFixed(2)}</p>
-              <p><strong>Available:</strong> {meal.available_quantity}</p>
-              <p><strong>Pick-up:</strong> {meal.time_available}</p>
-              {meal.size && <p><strong>Size:</strong> {meal.size}</p>}
+      <div className="grid md:grid-cols-2 gap-8">
+        {/* Meal Details */}
+        <div className="bg-white p-6 rounded-lg shadow-md">
+          <div className="aspect-[4/3] relative mb-4 rounded-md overflow-hidden">
+            <img
+              src={meal.image_urls?.[0] || '/placeholder-meal.jpg'}
+              alt={meal.title}
+              className="object-cover w-full h-full"
+            />
+          </div>
+          <h2 className="text-xl font-semibold mb-4">{meal.title}</h2>
+          <div className="space-y-3 text-gray-600">
+            <p>{meal.description}</p>
+            <div className="flex flex-col gap-2">
+              <p className="flex items-center justify-between">
+                <span className="font-medium">Available Date:</span>
+                <span>{formatDate(meal.date_available)}</span>
+              </p>
+              <p className="flex items-center justify-between">
+                <span className="font-medium">Pick-up Time:</span>
+                <span>{meal.time_available}</span>
+              </p>
+              <p className="flex items-center justify-between">
+                <span className="font-medium">Quantity Available:</span>
+                <span>{meal.available_quantity}</span>
+              </p>
+              {meal.size && (
+                <p className="flex items-center justify-between">
+                  <span className="font-medium">Size:</span>
+                  <span>{meal.size}</span>
+                </p>
+              )}
+              <p className="flex items-center justify-between">
+                <span className="font-medium">Price:</span>
+                <span className="text-xl font-bold text-emerald-600">${meal.price.toFixed(2)}</span>
+              </p>
             </div>
           </div>
         </div>
 
-        {/* Right side - Quantity Selection and Add to Cart */}
-        <div className="space-y-6">
+        {/* Booking Form */}
+        <div className="bg-white p-6 rounded-lg shadow-md">
           <div>
             <label className="block text-sm font-bold mb-2">
-              Quantity:
+              Quantity to Order:
             </label>
             <input
               type="number"
