@@ -96,9 +96,10 @@ export default function MealCard({ meal, onEdit, onDelete }: MealCardProps) {
         ) : (
           <button
             onClick={handleBookNow}
-            className="w-full bg-emerald-600 text-white px-4 py-2 rounded-md hover:bg-emerald-700 transition-colors"
+            className="w-full bg-emerald-600 text-white px-4 py-2 rounded-md hover:bg-emerald-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+            disabled={meal.available_quantity <= 0}
           >
-            Book Now
+            {meal.available_quantity > 0 ? 'Book Now' : 'Sold Out'}
           </button>
         )}
       </div>
