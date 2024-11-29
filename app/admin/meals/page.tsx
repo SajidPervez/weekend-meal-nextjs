@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import MealForm from '@/components/ui/MealForm';
 import MealCard from '@/components/ui/MealCard';
 import type { Meal, MealFormData } from '@/types/meal';
+import AdminLayout from '@/components/AdminLayout';
 
 export default function AdminMealsPage() {
   const [meals, setMeals] = useState<Meal[]>([]);
@@ -112,38 +113,40 @@ export default function AdminMealsPage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-2xl font-bold">
-          {editingMeal ? 'Edit Meal' : 'Manage Meals'}
-        </h1>
-        {!editingMeal && (
-          <button
-            onClick={() => setEditingMeal({ id: 0 } as Meal)}
-            className="bg-emerald-600 text-white px-4 py-2 rounded-md hover:bg-emerald-700 transition-colors"
-          >
-            Add New Meal
-          </button>
+    <AdminLayout>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-2xl font-bold">
+            {editingMeal ? 'Edit Meal' : 'Manage Meals'}
+          </h1>
+          {!editingMeal && (
+            <button
+              onClick={() => setEditingMeal({ id: 0 } as Meal)}
+              className="bg-emerald-600 text-white px-4 py-2 rounded-md hover:bg-emerald-700 transition-colors"
+            >
+              Add New Meal
+            </button>
+          )}
+        </div>
+        
+        {editingMeal ? (
+          <MealForm 
+            onSubmit={handleSubmit}
+            initialData={convertMealToFormData(editingMeal)}
+          />
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {meals.map((meal) => (
+              <MealCard
+                key={meal.id}
+                meal={meal}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+              />
+            ))}
+          </div>
         )}
       </div>
-      
-      {editingMeal ? (
-        <MealForm 
-          onSubmit={handleSubmit}
-          initialData={convertMealToFormData(editingMeal)}
-        />
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {meals.map((meal) => (
-            <MealCard
-              key={meal.id}
-              meal={meal}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-            />
-          ))}
-        </div>
-      )}
-    </div>
+    </AdminLayout>
   );
 }
