@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import AdminLayout from './AdminLayout';
+import { Utensils, MapPin } from "lucide-react";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -16,6 +17,7 @@ export default function AdminLayoutWrapper({ children }: AdminLayoutProps) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    console.log('AdminLayoutWrapper: Starting authentication check');
     checkAuth();
 
     // Subscribe to auth state changes
@@ -32,16 +34,22 @@ export default function AdminLayoutWrapper({ children }: AdminLayoutProps) {
 
   const checkAuth = async () => {
     try {
+      console.log('AdminLayoutWrapper: Checking session');
       const { data: { session } } = await supabase.auth.getSession();
+      
       if (!session) {
+        console.log('AdminLayoutWrapper: No session found, redirecting to login');
         router.push('/login');
         return;
       }
+      
+      console.log('AdminLayoutWrapper: Session found, user is authenticated');
       setIsAuthenticated(true);
     } catch (error) {
-      console.error('Auth error:', error);
+      console.error('AdminLayoutWrapper: Auth error:', error);
       router.push('/login');
     } finally {
+      console.log('AdminLayoutWrapper: Setting loading to false');
       setIsLoading(false);
     }
   };
@@ -52,7 +60,12 @@ export default function AdminLayoutWrapper({ children }: AdminLayoutProps) {
   };
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500"></div>
+        <span className="ml-2">Loading...</span>
+      </div>
+    );
   }
 
   if (!isAuthenticated) {
