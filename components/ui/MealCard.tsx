@@ -47,7 +47,7 @@ export default function MealCard({ meal, onEdit, onDelete }: MealCardProps) {
 
   return (
     <Card className="w-full">
-      <div className="relative h-48 w-full overflow-hidden bg-gray-100">
+      <div className="relative h-3/4 w-full overflow-hidden bg-gray-100">
         {meal.image_urls?.[0] && !imageError && (
           <img
             src={meal.image_urls[0]}
@@ -66,8 +66,11 @@ export default function MealCard({ meal, onEdit, onDelete }: MealCardProps) {
         )}
       </div>
       <div className="p-4">
-        <h3 className="text-xl font-semibold mb-2">{meal.title}</h3>
-        <p className="text-2xl font-bold mb-2">${meal.price.toFixed(2)}</p>
+        <div className="flex justify-between items-center mb-2">
+          <h3 className="text-xl font-semibold">{meal.title}</h3>
+          <p className="text-2xl font-bold">${meal.price.toFixed(2)}</p>
+        </div>
+        <p className="text-gray-600 mb-4">{meal.description}</p>
         <div className="space-y-1 text-gray-600 mb-4">
           <p>Quantity: {meal.available_quantity}</p>
           <p>Date: {new Date(meal.date_available).toLocaleDateString()}</p>

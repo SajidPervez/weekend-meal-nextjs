@@ -84,7 +84,6 @@ export default function HomePage() {
           <a href="https://www.google.com/maps/search/?api=1&query=Fawkner+Victoria+Australia" aria-label="Location" target="_blank" rel="noopener noreferrer">
             <MapPin className="h-6 w-6" />
           </a>
-          <span className="text-sm">Fawkner Victoria Australia</span>
         </div>
       </header>
       <main className="flex-1 pt-14">
@@ -184,6 +183,7 @@ export default function HomePage() {
               <i className="fab fa-instagram"></i>
             </a>
           </div>
+          <p className="mt-4"> 2023 Tasty Bites. All rights reserved.</p>
         </div>
       </footer>
     </div>
