@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import MealForm from '@/components/ui/MealForm';
 import MealCard from '@/components/ui/MealCard';
+import AdminLayout from '@/components/AdminLayout';
 import type { Meal, MealFormData } from '@/types/meal';
 
 export default function AdminMealsPage() {
@@ -112,29 +113,31 @@ export default function AdminMealsPage() {
   };
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">
-        {editingMeal ? 'Edit Meal' : 'Add New Meal'}
-      </h1>
-      
-      <MealForm 
-        onSubmit={handleSubmit}
-        initialData={editingMeal ? convertMealToFormData(editingMeal) : undefined}
-      />
+    <AdminLayout>
+      <div className="container mx-auto p-4">
+        <h1 className="text-2xl font-bold mb-4">
+          {editingMeal ? 'Edit Meal' : 'Add New Meal'}
+        </h1>
+        
+        <MealForm 
+          onSubmit={handleSubmit}
+          initialData={editingMeal ? convertMealToFormData(editingMeal) : undefined}
+        />
 
-      <div className="mt-8">
-        <h2 className="text-xl font-bold mb-4">Existing Meals</h2>
-        <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-          {meals.map((meal) => (
-            <MealCard
-              key={meal.id}
-              meal={meal}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-            />
-          ))}
+        <div className="mt-8">
+          <h2 className="text-xl font-bold mb-4">Existing Meals</h2>
+          <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+            {meals.map((meal) => (
+              <MealCard
+                key={meal.id}
+                meal={meal}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+              />
+            ))}
+          </div>
         </div>
       </div>
-    </div>
+    </AdminLayout>
   );
 }

@@ -4,12 +4,13 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import AdminLayout from './AdminLayout';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
 }
 
-export default function AdminLayout({ children }: AdminLayoutProps) {
+export default function AdminLayoutWrapper({ children }: AdminLayoutProps) {
   const router = useRouter();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -59,7 +60,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   }
 
   return (
-    <div>
+    <AdminLayout>
       <nav className="bg-stone-800 text-white p-4">
         <div className="container mx-auto flex justify-between items-center">
           <div className="text-xl font-bold">Admin Dashboard</div>
@@ -88,6 +89,6 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       <main className="container mx-auto">
         {children}
       </main>
-    </div>
+    </AdminLayout>
   );
 }
