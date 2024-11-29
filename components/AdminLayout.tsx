@@ -4,8 +4,6 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import AdminLayout from './AdminLayout';
-import { Utensils, MapPin } from "lucide-react";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -73,35 +71,35 @@ export default function AdminLayoutWrapper({ children }: AdminLayoutProps) {
   }
 
   return (
-    <AdminLayout>
+    <div className="flex flex-col min-h-screen">
       <nav className="bg-stone-800 text-white p-4">
         <div className="container mx-auto flex justify-between items-center">
           <div className="text-xl font-bold">Admin Dashboard</div>
           <div className="space-x-4">
             <Link 
-              href="/admin" 
-              className="text-white hover:text-stone-300"
+              href="/admin"
+              className="hover:text-emerald-300"
             >
               Dashboard
             </Link>
             <Link 
-              href="/admin/meals" 
-              className="text-white hover:text-stone-300"
+              href="/admin/meals"
+              className="hover:text-emerald-300"
             >
-              Add Meal
+              Manage Meals
             </Link>
-            <button
+            <button 
               onClick={handleSignOut}
-              className="text-red-400 hover:text-red-300"
+              className="hover:text-emerald-300"
             >
               Sign Out
             </button>
           </div>
         </div>
       </nav>
-      <main className="container mx-auto">
+      <main className="flex-1">
         {children}
       </main>
-    </AdminLayout>
+    </div>
   );
 }
