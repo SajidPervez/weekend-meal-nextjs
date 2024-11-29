@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react'
-import { MapPin, ArrowLeft } from "lucide-react"
+import { MapPin, ArrowLeft, Utensils } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { supabase } from '@/lib/supabase';
@@ -76,20 +76,21 @@ export default function HomePage() {
   return (
     <div className="flex flex-col min-h-screen">
       <header className="px-4 lg:px-6 h-14 flex items-center justify-between bg-white fixed w-full z-10 border-b">
-        <Link href="/about" className="flex items-center text-emerald-600">
-          <span className="ml-2 text-xl font-bold">About Us</span>
+        <Link href="/" className="flex items-center text-emerald-600">
+          <Utensils className="h-6 w-6" />
+          <span className="ml-2 text-xl font-bold">Tasty Bites</span>
         </Link>
         <div className="flex items-center gap-4">
-          <button aria-label="Location">
+          <a href="https://www.google.com/maps/search/?api=1&query=Fawkner+Victoria+Australia" aria-label="Location" target="_blank" rel="noopener noreferrer">
             <MapPin className="h-6 w-6" />
-          </button>
-          <span className="text-sm">19A Jukes Road Fawkner, Victoria 3060 Australia</span>
+          </a>
+          <span className="text-sm">Fawkner Victoria Australia</span>
         </div>
       </header>
       <main className="flex-1 pt-14">
         {featuredMeal ? (
-          <section className="w-full py-12 px-4 bg-gradient-to-b from-white to-gray-50 relative">
-            <div className="absolute inset-0 bg-fixed bg-cover bg-center animate-pulse" style={{ backgroundImage: 'url(/path-to-background-image.jpg)' }}></div>
+          <section className="w-full py-12 px-4 bg-gray-100 relative">
+            <div className="absolute inset-0 bg-fixed bg-cover bg-center animate-pulse" style={{ backgroundImage: 'url(/path-to-minimalist-background.jpg)' }}></div>
             <div className="container mx-auto max-w-7xl relative z-10">
               <div className="grid md:grid-cols-2 gap-8 items-center">
                 {/* Left side - Meal Details */}
@@ -158,7 +159,8 @@ export default function HomePage() {
 
         <section className="w-full py-12 bg-gray-50">
           <div className="container mx-auto px-4">
-            <h2 className="text-3xl font-bold text-center mb-8">More Menu Items</h2>
+            <h2 className="text-3xl font-bold text-center mb-8">Discover Your Next Meal</h2>
+            <p className="text-center text-lg mb-8">Browse our selection of delicious, chef-prepared meals</p>
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {meals.map((meal) => (
                 <div key={meal.id} className="bg-white rounded-lg shadow-md overflow-hidden">
