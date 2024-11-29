@@ -111,7 +111,7 @@ export default function MealForm({ onSubmit, initialData }: MealFormProps) {
           Images (Select up to 3 images)
         </label>
         <p className="text-sm text-gray-500 mb-2">
-          Click "Choose File" multiple times or select multiple files at once by holding Ctrl/Cmd while selecting
+          Click &quot;Choose File&quot; multiple times or select multiple files at once by holding Ctrl/Cmd while selecting
         </p>
         <div className="mt-1 flex flex-col space-y-4">
           <input
