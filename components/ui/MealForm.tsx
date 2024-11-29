@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { v4 as uuidv4 } from 'uuid';
 import type { MealFormData } from '@/types/meal';
+import { useRouter } from 'next/navigation';
 
 interface MealFormProps {
   onSubmit: (data: MealFormData) => void;
@@ -12,6 +13,7 @@ interface MealFormProps {
 }
 
 export default function MealForm({ onSubmit, initialData }: MealFormProps) {
+  const router = useRouter();
   const [uploading, setUploading] = useState(false);
   const [images, setImages] = useState<File[]>([]);
   const [previewUrls, setPreviewUrls] = useState<string[]>(
@@ -94,10 +96,23 @@ export default function MealForm({ onSubmit, initialData }: MealFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="flex justify-between items-center mb-6">
+        <button
+          type="button"
+          onClick={() => router.push('/admin')}
+          className="bg-gray-600 text-white py-2 px-4 rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+        >
+          Back to Dashboard
+        </button>
+      </div>
+      
       <div>
         <label className="block text-sm font-medium text-gray-700">
-          Images (Max 3)
+          Images (Select up to 3 images)
         </label>
+        <p className="text-sm text-gray-500 mb-2">
+          Click "Choose File" multiple times or select multiple files at once by holding Ctrl/Cmd while selecting
+        </p>
         <div className="mt-1 flex flex-col space-y-4">
           <input
             type="file"
