@@ -20,22 +20,7 @@ interface CheckoutBody {
 }
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: '2024-11-20.acacia',   const successUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/checkout/success?session_id={CHECKOUT_SESSION_ID}`;
-  const cancelUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/checkout/cancel`;
-  
-  console.log('Success URL length:', successUrl.length);
-  console.log('Cancel URL length:', cancelUrl.length);line_items: items.map((item) => ({
-    price_data: {
-      currency: 'usd',
-      product_data: {
-        name: item.meal.title,
-        description: item.meal.description || undefined,
-        // Remove images field
-      },
-      unit_amount: Math.round(item.meal.price * 100),
-    },
-    quantity: item.quantity,
-  })),
+  apiVersion: '2024-11-20.acacia',
   typescript: true,
 });
 
@@ -51,11 +36,11 @@ export async function POST(req: Request) {
       );
     }
 
-    console.log('Creating checkout session with:', {
-      itemCount: items.length,
-      email: customerEmail,
-      baseUrl: process.env.NEXT_PUBLIC_BASE_URL,
-    });
+    const successUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/checkout/success?session_id={CHECKOUT_SESSION_ID}`;
+    const cancelUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/checkout/cancel`;
+
+    console.log('Success URL length:', successUrl.length);
+    console.log('Cancel URL length:', cancelUrl.length);
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -65,15 +50,15 @@ export async function POST(req: Request) {
           product_data: {
             name: item.meal.title,
             description: item.meal.description || undefined,
-            images: item.meal.image_urls || [],
+            // Remove images field
           },
           unit_amount: Math.round(item.meal.price * 100),
         },
         quantity: item.quantity,
       })),
       mode: 'payment',
-      success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/checkout/cancel`,
+      success_url: successUrl,
+      cancel_url: cancelUrl,
       customer_email: customerEmail,
       metadata: {
         customerPhone,
@@ -91,4 +76,4 @@ export async function POST(req: Request) {
       { status: 500 }
     );
   }
-} 
+}
