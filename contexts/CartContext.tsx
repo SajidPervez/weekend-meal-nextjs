@@ -15,12 +15,14 @@ interface CartContextType {
   updateQuantity: (mealId: number, quantity: number) => void;
   clearCart: () => void;
   getTotalPrice: () => number;
+  userEmail: string | null;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
 
   const addToCart = (meal: Meal, quantity: number) => {
     setItems(currentItems => {
@@ -47,7 +49,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       )
     );
   };
- 
+
   const clearCart = () => {
     setItems([]);
   };
@@ -64,6 +66,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       updateQuantity,
       clearCart,
       getTotalPrice,
+      userEmail,
     }}>
       {children}
     </CartContext.Provider>
@@ -76,4 +79,4 @@ export function useCart() {
     throw new Error('useCart must be used within a CartProvider');
   }
   return context;
-} 
+}
