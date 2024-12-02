@@ -1,4 +1,6 @@
 import {Resend} from 'resend';
+import React from 'react';
+import EmailContent from '@/components/EmailContent';
 
 // Initialize Resend SDK with your API key
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -16,9 +18,10 @@ export async function sendReceiptEmail(email: string, subject: string, body: str
       to: email,
       subject: subject,
       html: body,
+      react: <EmailContent body={body} />,
     });
     console.log(`Receipt email sent to ${email}`);
   } catch (error) {
-    console.error('Failed to send receipt email:', error);
+    console.error('Failed to send email:', error);
   }
 }
