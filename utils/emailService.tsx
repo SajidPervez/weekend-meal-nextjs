@@ -1,4 +1,4 @@
-import {Resend} from 'resend';
+import { Resend } from 'resend';
 import React from 'react';
 import EmailContent from '@/components/EmailContent';
 
@@ -6,7 +6,7 @@ import EmailContent from '@/components/EmailContent';
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 /**
- * Sends a receipt email to the provided email address.
+ * Sends a receipt email to the specified email address.
  * @param {string} email - The recipient's email address.
  * @param {string} subject - The subject of the email.
  * @param {string} body - The body of the email.
@@ -15,10 +15,10 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 export async function sendReceiptEmail(email: string, subject: string, body: string): Promise<void> {
   try {
     await resend.emails.send({
+      from: process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev',
       to: email,
       subject: subject,
-      html: body,
-      react: <EmailContent body={body} />,
+      react: EmailContent({ body })
     });
     console.log(`Receipt email sent to ${email}`);
   } catch (error) {
