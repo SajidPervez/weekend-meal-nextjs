@@ -14,6 +14,8 @@ export default function SuccessPage() {
   }, [clearCart]);
 
   const handleReturnHome = () => {
+    console.log('handleReturnHome: Redirecting to home');
+    console.log('Current router status:', router);
     router.push('/');
   };
 
