@@ -4,14 +4,20 @@ import { useEffect } from 'react';
 import { useCart } from '@/contexts/CartContext';
 import { useRouter } from 'next/navigation';
 import { CheckCircle } from 'lucide-react';
+import { sendReceiptEmail } from '@/utils/emailService';
 
 export default function SuccessPage() {
-  const { clearCart } = useCart();
+  const { clearCart, userEmail } = useCart();
   const router = useRouter();
 
   useEffect(() => {
     clearCart();
-  }, [clearCart]);
+    if (userEmail) {
+      sendReceiptEmail(userEmail, 'Your Receipt', '<p>Thank you for your purchase!</p>')
+        .then(() => console.log('Email sent successfully'))
+        .catch((error) => console.error('Error sending email:', error));
+    }
+  }, [clearCart, userEmail]);
 
   const handleReturnHome = () => {
     console.log('handleReturnHome: Redirecting to home');
@@ -36,4 +42,4 @@ export default function SuccessPage() {
       </div>
     </div>
   );
-} 
+}
