@@ -75,7 +75,7 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session) {
         sessionId: expandedSession.id,
         amount: expandedSession.amount_total || 0,
         items: expandedSession.line_items?.data.map(item => ({
-          name: typeof item.price?.product === 'object' ? item.price.product.name : 'Product',
+          name: item.description || 'Product',
           quantity: item.quantity || 1,
           price: (item.amount_total || 0) / 100
         }))
