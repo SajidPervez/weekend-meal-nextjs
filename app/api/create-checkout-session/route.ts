@@ -5,12 +5,17 @@ import { CartItem } from '@/contexts/CartContext';
 // Add debug logging
 console.log('Environment variables check:', {
   hasStripeKey: !!process.env.STRIPE_SECRET_KEY,
-  baseUrl: process.env.NEXT_PUBLIC_BASE_URL,
+  baseUrl: process.env.NEXT_PUBLIC_SITE_URL,
 });
 
 if (!process.env.STRIPE_SECRET_KEY) {
   console.error('Missing STRIPE_SECRET_KEY in environment variables');
   throw new Error('STRIPE_SECRET_KEY is not defined in environment variables');
+}
+
+if (!process.env.NEXT_PUBLIC_SITE_URL) {
+  console.error('Missing NEXT_PUBLIC_SITE_URL in environment variables');
+  throw new Error('NEXT_PUBLIC_SITE_URL is not defined in environment variables');
 }
 
 interface CheckoutBody {
@@ -36,8 +41,8 @@ export async function POST(req: Request) {
       );
     }
 
-    const successUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/checkout/success?session_id={CHECKOUT_SESSION_ID}`;
-    const cancelUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/checkout/cancel`;
+    const successUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/checkout/success?session_id={CHECKOUT_SESSION_ID}`;
+    const cancelUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/checkout/cancel`;
 
     console.log('Success URL length:', successUrl.length);
     console.log('Cancel URL length:', cancelUrl.length);
@@ -49,10 +54,10 @@ export async function POST(req: Request) {
           currency: 'usd',
           product_data: {
             name: item.meal.title,
-            description: item.meal.description || undefined,
-            // Remove images field
+            description: item.meal.description,
+            images: [item.meal.imageUrl],
           },
-          unit_amount: Math.round(item.meal.price * 100),
+          unit_amount: Math.round(item.meal.price * 100), // Convert to cents
         },
         quantity: item.quantity,
       })),
@@ -61,7 +66,7 @@ export async function POST(req: Request) {
       cancel_url: cancelUrl,
       customer_email: customerEmail,
       metadata: {
-        customerPhone,
+        customerPhone: customerPhone,
       },
       shipping_address_collection: {
         allowed_countries: ['US', 'CA'],
@@ -72,7 +77,10 @@ export async function POST(req: Request) {
   } catch (error) {
     console.error('Detailed error in checkout session:', error);
     return NextResponse.json(
-      { error: 'Error creating checkout session', details: error instanceof Error ? error.message : 'Unknown error' },
+      { 
+        error: 'Error creating checkout session',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     );
   }

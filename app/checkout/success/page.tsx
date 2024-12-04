@@ -1,44 +1,113 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useCart } from '@/contexts/CartContext';
-import { useRouter } from 'next/navigation';
-import { CheckCircle } from 'lucide-react';
-import { sendReceiptEmail } from '@/utils/emailService';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { CheckCircle, Loader2, XCircle } from 'lucide-react';
+import Link from 'next/link';
+
+interface SessionData {
+  session: {
+    status: string;
+    customer_details?: {
+      email?: string;
+      name?: string;
+    };
+    amount_total?: number;
+  };
+}
 
 export default function SuccessPage() {
-  const { clearCart, userEmail } = useCart();
+  const { clearCart } = useCart();
+  const searchParams = useSearchParams();
   const router = useRouter();
+  const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
+  const [error, setError] = useState<string | null>(null);
+  const [sessionData, setSessionData] = useState<SessionData | null>(null);
+  const [hasCheckedSession, setHasCheckedSession] = useState(false);
 
   useEffect(() => {
-    clearCart();
-    if (userEmail) {
-      sendReceiptEmail(userEmail, 'Your Receipt', '<p>Thank you for your purchase!</p>')
-        .then(() => console.log('Email sent successfully'))
-        .catch((error) => console.error('Error sending email:', error));
+    const sessionId = searchParams.get('session_id');
+    
+    // Only check session once
+    if (!sessionId || hasCheckedSession) {
+      if (!sessionId) {
+        setError('No session ID found');
+        setStatus('error');
+      }
+      return;
     }
-  }, [clearCart, userEmail]);
 
-  const handleReturnHome = () => {
-    console.log('handleReturnHome: Redirecting to home');
-    console.log('Current router status:', router);
-    router.push('/');
-  };
+    const checkSession = async () => {
+      try {
+        const response = await fetch(`/api/get-session?session_id=${sessionId}`);
+        const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to fetch session details');
+        }
+
+        setSessionData(data);
+        clearCart();
+        setStatus('success');
+      } catch (err) {
+        console.error('Error processing order:', err);
+        setError(err instanceof Error ? err.message : 'An error occurred');
+        setStatus('error');
+      } finally {
+        setHasCheckedSession(true);
+      }
+    };
+
+    checkSession();
+  }, [searchParams, clearCart, hasCheckedSession]);
 
   return (
-    <div className="container mx-auto p-8 text-center">
-      <div className="max-w-md mx-auto">
-        <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-        <h1 className="text-2xl font-bold mb-4">Thank You for Your Order!</h1>
-        <p className="text-gray-600 mb-8">
-          We&apos;ve received your order and will send you a confirmation email shortly.
-        </p>
-        <button
-          onClick={handleReturnHome}
-          className="inline-block bg-emerald-600 text-white px-6 py-3 rounded-md hover:bg-emerald-700 transition-colors"
-        >
-          Return to Home
-        </button>
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div className="max-w-md w-full bg-white p-8 rounded-lg shadow-lg">
+        {status === 'loading' ? (
+          <div className="text-center">
+            <Loader2 className="w-16 h-16 text-emerald-500 mx-auto mb-4 animate-spin" />
+            <p className="text-gray-600">Processing your order...</p>
+          </div>
+        ) : status === 'error' ? (
+          <div className="text-center">
+            <XCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+            <div className="text-red-500 mb-4">
+              <p>Error: {error}</p>
+            </div>
+            <Link 
+              href="/"
+              className="inline-block bg-emerald-600 text-white px-6 py-3 rounded-md hover:bg-emerald-700 transition-colors"
+            >
+              Return to Home
+            </Link>
+          </div>
+        ) : (
+          <div className="text-center">
+            <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+            <h1 className="text-2xl font-bold mb-4">Thank You for Your Order!</h1>
+            {sessionData?.session.customer_details?.name && (
+              <p className="text-gray-700 mb-2">
+                Hi {sessionData.session.customer_details.name}!
+              </p>
+            )}
+            <p className="text-gray-600 mb-2">
+              Your order has been confirmed and is being processed.
+            </p>
+            {sessionData?.session.customer_details?.email && (
+              <p className="text-gray-600 mb-8">
+                We&apos;ve sent a confirmation email to {sessionData.session.customer_details.email}.
+              </p>
+            )}
+            <Link 
+              href="/"
+              className="inline-block bg-emerald-600 text-white px-6 py-3 rounded-md hover:bg-emerald-700 transition-colors"
+            >
+              Return to Home
+            </Link>
+          </div>
+        )}
       </div>
     </div>
   );
