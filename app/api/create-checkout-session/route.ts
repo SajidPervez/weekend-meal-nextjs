@@ -55,7 +55,6 @@ export async function POST(req: Request) {
           product_data: {
             name: item.meal.title,
             description: item.meal.description,
-            images: item.meal.image_urls?.[0] ? [item.meal.image_urls[0]] : [],
           },
           unit_amount: Math.round(item.meal.price * 100), // Convert to cents
         },
