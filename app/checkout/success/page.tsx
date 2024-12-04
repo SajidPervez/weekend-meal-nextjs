@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useCart } from '@/contexts/CartContext';
 import { useSearchParams } from 'next/navigation';
 import { CheckCircle, Loader2, XCircle } from 'lucide-react';
@@ -17,7 +17,7 @@ interface SessionData {
   };
 }
 
-export default function SuccessPage() {
+function SuccessContent() {
   const { clearCart } = useCart();
   const searchParams = useSearchParams();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
@@ -96,7 +96,7 @@ export default function SuccessPage() {
             </p>
             {sessionData?.session.customer_details?.email && (
               <p className="text-gray-600 mb-8">
-                We&apos;ve sent a confirmation email to {sessionData.session.customer_details.email}.
+                We've sent a confirmation email to {sessionData.session.customer_details.email}.
               </p>
             )}
             <Link 
@@ -109,5 +109,20 @@ export default function SuccessPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function SuccessPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="text-center">
+          <Loader2 className="w-16 h-16 text-emerald-500 mx-auto mb-4 animate-spin" />
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    }>
+      <SuccessContent />
+    </Suspense>
   );
 }
