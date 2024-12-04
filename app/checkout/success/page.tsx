@@ -96,7 +96,7 @@ function SuccessContent() {
             </p>
             {sessionData?.session.customer_details?.email && (
               <p className="text-gray-600 mb-8">
-                We've sent a confirmation email to {sessionData.session.customer_details.email}.
+                We&apos;ve sent a confirmation email to {sessionData.session.customer_details.email}.
               </p>
             )}
             <Link 
