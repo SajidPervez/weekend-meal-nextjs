@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useCart } from '@/contexts/CartContext';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { CheckCircle, Loader2, XCircle } from 'lucide-react';
 import Link from 'next/link';
 
@@ -20,7 +20,6 @@ interface SessionData {
 export default function SuccessPage() {
   const { clearCart } = useCart();
   const searchParams = useSearchParams();
-  const router = useRouter();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [error, setError] = useState<string | null>(null);
   const [sessionData, setSessionData] = useState<SessionData | null>(null);
