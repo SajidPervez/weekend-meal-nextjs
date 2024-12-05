@@ -1,3 +1,4 @@
+import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { CartItem } from '@/contexts/CartContext';
@@ -41,8 +42,10 @@ export async function POST(req: Request) {
       );
     }
 
-    const successUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/checkout/success?session_id={CHECKOUT_SESSION_ID}`;
-    const cancelUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/checkout/cancel`;
+    const origin = headers().get('origin') || process.env.NEXT_PUBLIC_SITE_URL;
+
+    const successUrl = `${origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}`;
+    const cancelUrl = `${origin}/checkout/cancel`;
 
     console.log('Success URL length:', successUrl.length);
     console.log('Cancel URL length:', cancelUrl.length);
@@ -55,6 +58,10 @@ export async function POST(req: Request) {
           product_data: {
             name: item.meal.title,
             description: item.meal.description,
+            metadata: {
+              meal_id: item.meal.id,
+              original_quantity: item.meal.available_quantity
+            }
           },
           unit_amount: Math.round(item.meal.price * 100), // Convert to cents
         },
@@ -66,6 +73,12 @@ export async function POST(req: Request) {
       customer_email: customerEmail,
       metadata: {
         customerPhone: customerPhone,
+        meal_details: JSON.stringify(items.map(item => ({
+          id: item.meal.id,
+          title: item.meal.title,
+          quantity: item.quantity,
+          available_quantity: item.meal.available_quantity
+        })))
       },
       shipping_address_collection: {
         allowed_countries: ['US', 'CA'],
