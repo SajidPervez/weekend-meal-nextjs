@@ -50,6 +50,16 @@ export async function POST(req: Request) {
     console.log('Success URL length:', successUrl.length);
     console.log('Cancel URL length:', cancelUrl.length);
 
+    // Store meal details in metadata for the webhook
+    const mealDetails = items.map(item => ({
+      id: item.meal.id,
+      title: item.meal.title,
+      quantity: item.quantity,
+      available_quantity: item.meal.available_quantity
+    }));
+
+    console.log('Creating checkout session with meals:', JSON.stringify(mealDetails, null, 2));
+
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: items.map((item) => ({
@@ -73,12 +83,7 @@ export async function POST(req: Request) {
       customer_email: customerEmail,
       metadata: {
         customerPhone: customerPhone,
-        meal_details: JSON.stringify(items.map(item => ({
-          id: item.meal.id,
-          title: item.meal.title,
-          quantity: item.quantity,
-          available_quantity: item.meal.available_quantity
-        })))
+        meal_details: JSON.stringify(mealDetails)
       },
       shipping_address_collection: {
         allowed_countries: ['US', 'CA'],
