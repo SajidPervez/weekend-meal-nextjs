@@ -146,7 +146,8 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session) {
           created_at: new Date().toISOString(),
           customer_email: session.customer_details?.email || '',
           customer_phone: session.customer_details?.phone || '',
-          status: 'pending'
+          status: 'pending',
+          session_id: session.id
         })
         .select()
         .single();
