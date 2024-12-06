@@ -22,6 +22,9 @@ interface MealDetail {
   title: string;
   quantity: number;
   available_quantity: number;
+  price: number;
+  time_available: string;
+  date_available: string;
 }
 
 async function updateMealQuantities(session: Stripe.Checkout.Session) {
@@ -128,6 +131,55 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session) {
     
     // Update meal quantities
     await updateMealQuantities(session);
+
+    // Create new order
+    if (session.metadata?.meal_details) {
+      const mealDetails: MealDetail[] = JSON.parse(session.metadata.meal_details);
+      
+      // First create the order
+      const { data: orderData, error: orderError } = await webhookClient
+        .from('orders')
+        .insert({
+          user_id: null, // Will be null for guest checkouts
+          total_amount: session.amount_total ? session.amount_total / 100 : 0,
+          payment_status: 'paid',
+          created_at: new Date().toISOString(),
+          customer_email: session.customer_details?.email || '',
+          customer_phone: session.customer_details?.phone || '',
+          status: 'pending'
+        })
+        .select()
+        .single();
+
+      if (orderError) {
+        console.error('Failed to create order:', orderError);
+        throw orderError;
+      }
+
+      console.log('Order created successfully:', orderData);
+
+      // Then create order items
+      const orderItems = mealDetails.map(meal => ({
+        order_id: orderData.id,
+        meal_id: meal.id,
+        quantity: meal.quantity,
+        price: meal.price || 0,
+        created_at: new Date().toISOString(),
+        pickup_time: meal.time_available,
+        pickup_date: meal.date_available
+      }));
+
+      const { error: itemsError } = await webhookClient
+        .from('order_items')
+        .insert(orderItems);
+
+      if (itemsError) {
+        console.error('Failed to create order items:', itemsError);
+        throw itemsError;
+      }
+
+      console.log('Order items created successfully');
+    }
 
     // Send confirmation email
     if (session.customer_details?.email) {

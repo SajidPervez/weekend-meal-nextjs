@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { Utensils } from "lucide-react";
 import { supabase } from '@/lib/supabase';
 
 interface AdminLayoutProps {
@@ -72,32 +73,33 @@ export default function AdminLayoutWrapper({ children }: AdminLayoutProps) {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <nav className="bg-stone-800 text-white p-4">
-        <div className="container mx-auto flex justify-between items-center">
-          <div className="text-xl font-bold">Admin Dashboard</div>
-          <div className="space-x-4">
-            <Link 
-              href="/admin"
-              className="hover:text-emerald-300"
-            >
-              Dashboard
-            </Link>
-            <Link 
-              href="/admin/meals"
-              className="hover:text-emerald-300"
-            >
-              Manage Meals
-            </Link>
-            <button 
-              onClick={handleSignOut}
-              className="hover:text-emerald-300"
-            >
-              Sign Out
-            </button>
-          </div>
+      <header className="px-4 lg:px-6 h-14 flex items-center justify-between bg-white border-b">
+        <Link href="/admin" className="flex items-center text-emerald-600">
+          <Utensils className="h-6 w-6" />
+          <span className="ml-2 text-xl font-bold">Tasty Bites</span>
+        </Link>
+        <div className="flex items-center gap-4">
+          <Link 
+            href="/admin"
+            className="text-gray-600 hover:text-emerald-600"
+          >
+            Dashboard
+          </Link>
+          <Link 
+            href="/admin/meals"
+            className="text-gray-600 hover:text-emerald-600"
+          >
+            Manage Meals
+          </Link>
+          <button 
+            onClick={handleSignOut}
+            className="text-gray-600 hover:text-emerald-600"
+          >
+            Sign Out
+          </button>
         </div>
-      </nav>
-      <main className="flex-1">
+      </header>
+      <main className="flex-1 pt-14">
         {children}
       </main>
     </div>
