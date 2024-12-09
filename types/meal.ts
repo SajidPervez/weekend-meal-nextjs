@@ -5,6 +5,8 @@ export type Meal = {
   title: string;
   description: string;
   price: number;
+  includes_gst: boolean;
+  gst_rate: number;
   date_available: string;
   image_urls: string[];
   available_quantity: number;
@@ -17,6 +19,7 @@ export type Meal = {
     days: string[];
   };
   meal_types: MealType[];
+  is_chef_special: boolean;
   created_at?: string;
   updated_at?: string;
 }
@@ -27,6 +30,8 @@ export interface MealFormData {
   description: string | null;
   image_urls: string[];
   price: string | number;
+  includes_gst: boolean;
+  gst_rate: number;
   available_quantity: string | number;
   date_available: string;
   time_available: string;
@@ -35,4 +40,5 @@ export interface MealFormData {
   availability_date: string | null;
   recurring_pattern: string | null;
   meal_types: MealType[];
+  is_chef_special: boolean;
 }

@@ -55,6 +55,10 @@ export default function MealCard({ meal, onEdit, onDelete }: MealCardProps) {
     });
   };
 
+  const calculateDisplayPrice = (meal: Meal) => {
+    return meal.includes_gst ? meal.price : meal.price * (1 + meal.gst_rate);
+  };
+
   return (
     <Card className="w-full h-full overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow">
       <div className="relative aspect-[4/3] w-full overflow-hidden bg-gray-100">
@@ -78,9 +82,14 @@ export default function MealCard({ meal, onEdit, onDelete }: MealCardProps) {
       </div>
       <div className="p-4">
         <div className="flex justify-between items-start gap-2 mb-2">
-          <div className="flex items-center gap-2">
-            <h3 className="text-lg font-semibold text-gray-900">{meal.title}</h3>
-            <div className="flex gap-1">
+          <div className="flex flex-col gap-2">
+            <h3 className="text-lg font-semibold">{meal.title}</h3>
+            <div className="flex flex-wrap gap-2">
+              {meal.is_chef_special && (
+                <span className="inline-flex items-center px-2 py-1 rounded-full text-sm bg-amber-100 text-amber-800">
+                  👨‍🍳 Chef Special
+                </span>
+              )}
               {meal.meal_types.map((type) => (
                 <span
                   key={type}
@@ -92,9 +101,12 @@ export default function MealCard({ meal, onEdit, onDelete }: MealCardProps) {
               ))}
             </div>
           </div>
-          <span className="text-lg font-semibold text-emerald-600">
-            ${meal.price.toFixed(2)}
-          </span>
+          <div className="text-right">
+            <p className="text-lg font-semibold text-emerald-600">
+              ${calculateDisplayPrice(meal).toFixed(2)}
+            </p>
+            <p className="text-xs text-gray-500">Inc. GST</p>
+          </div>
         </div>
         <p className="text-sm text-gray-600 mb-3 line-clamp-2">{meal.description}</p>
         <div className="space-y-1 text-sm text-gray-600 mb-4">

@@ -23,6 +23,28 @@ export default function MealForm({ onSubmit, initialData }: MealFormProps) {
   const [selectedMealTypes, setSelectedMealTypes] = useState<MealType[]>(
     initialData?.meal_types || []
   );
+  const [includesGst, setIncludesGst] = useState(initialData?.includes_gst || false);
+  const [basePrice, setBasePrice] = useState(initialData?.price || 0);
+  const [isChefSpecial, setIsChefSpecial] = useState(initialData?.is_chef_special || false);
+  const GST_RATE = 0.10; // 10% GST
+
+  const roundToNearestDollar = (price: number) => {
+    return Math.ceil(price);
+  };
+
+  const calculateFinalPrice = (price: number) => {
+    if (!includesGst) {
+      return price; // If GST not included, return base price
+    }
+    // If GST included, add GST amount to base price
+    const gstAmount = price * GST_RATE;
+    return roundToNearestDollar(price + gstAmount);
+  };
+
+  const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newBasePrice = parseFloat(e.target.value) || 0;
+    setBasePrice(newBasePrice);
+  };
 
   const mealTypes: { value: MealType; label: string; icon: string }[] = [
     { value: 'vegan', label: 'Vegan', icon: '🌱' },
@@ -83,10 +105,14 @@ export default function MealForm({ onSubmit, initialData }: MealFormProps) {
         imageUrls.push(publicUrl);
       }
 
+      const finalPrice = calculateFinalPrice(basePrice);
+
       const mealData: MealFormData = {
         title: formData.get('title') as string,
         description: formData.get('description') as string,
-        price: parseFloat(formData.get('price') as string),
+        price: finalPrice,
+        includes_gst: includesGst,
+        gst_rate: GST_RATE,
         available_quantity: parseInt(formData.get('available_quantity') as string),
         date_available: formData.get('date_available') as string,
         time_available: formData.get('time_available') as string,
@@ -96,6 +122,7 @@ export default function MealForm({ onSubmit, initialData }: MealFormProps) {
         available_for: null,
         availability_date: null,
         recurring_pattern: null,
+        is_chef_special: isChefSpecial,
       };
 
       await onSubmit(mealData);
@@ -186,21 +213,83 @@ export default function MealForm({ onSubmit, initialData }: MealFormProps) {
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700">
-            Price
-          </label>
-          <input
-            type="number"
-            name="price"
-            defaultValue={initialData?.price}
-            step="0.01"
-            required
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500"
-          />
-        </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Price and GST
+        </label>
+        <div className="bg-gray-50 p-4 rounded-lg space-y-4">
+          {/* Base Price Input */}
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">
+              Base Price ($)
+            </label>
+            <input
+              type="number"
+              name="price"
+              step="0.01"
+              min="0"
+              value={basePrice}
+              onChange={handlePriceChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500"
+              required
+            />
+          </div>
 
+          {/* GST Checkbox */}
+          <div className="flex items-center gap-2 py-2">
+            <input
+              type="checkbox"
+              id="includes-gst"
+              checked={includesGst}
+              onChange={(e) => setIncludesGst(e.target.checked)}
+              className="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded"
+            />
+            <label htmlFor="includes-gst" className="text-sm text-gray-700">
+              Add GST (10%)
+            </label>
+          </div>
+
+          {/* Final Price Display */}
+          <div className="bg-white p-3 rounded-md border border-gray-200">
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-600">Final Price:</span>
+              <span className="text-lg font-semibold text-emerald-600">
+                ${calculateFinalPrice(basePrice).toFixed(2)}
+                {includesGst && " (Inc. GST)"}
+              </span>
+            </div>
+            {includesGst && (
+              <div className="text-xs text-gray-500 mt-1 flex justify-between">
+                <span>Base Price: ${basePrice.toFixed(2)}</span>
+                <span>GST (10%): ${(basePrice * GST_RATE).toFixed(2)}</span>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Featured Status
+        </label>
+        <div className="bg-gray-50 p-4 rounded-lg space-y-4">
+          <h3 className="font-medium text-gray-900">Featured Status</h3>
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="isChefSpecial"
+              checked={isChefSpecial}
+              onChange={(e) => setIsChefSpecial(e.target.checked)}
+              className="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded"
+            />
+            <label htmlFor="isChefSpecial" className="text-sm text-gray-600">
+              Feature as Chef Special (displays in hero section)
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700">
             Available Quantity
@@ -213,9 +302,7 @@ export default function MealForm({ onSubmit, initialData }: MealFormProps) {
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500"
           />
         </div>
-      </div>
 
-      <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700">
             Date Available
@@ -228,7 +315,9 @@ export default function MealForm({ onSubmit, initialData }: MealFormProps) {
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500"
           />
         </div>
+      </div>
 
+      <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700">
             Time Available

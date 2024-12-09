@@ -11,19 +11,36 @@ import MealFilters from '@/components/ui/MealFilters';
 
 export default function HomePage() {
   const [meals, setMeals] = useState<Meal[]>([]);
-  const [featuredMeal, setFeaturedMeal] = useState<Meal | null>(null);
+  const [chefSpecials, setChefSpecials] = useState<Meal[]>([]);
   const [selectedTypes, setSelectedTypes] = useState<MealType[]>([]);
   const [loading, setLoading] = useState(true);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [currentSpecialIndex, setCurrentSpecialIndex] = useState(0);
 
   useEffect(() => {
     fetchMeals();
   }, []);
 
+  useEffect(() => {
+    if (chefSpecials.length <= 1) return;
+
+    const interval = setInterval(() => {
+      setCurrentSpecialIndex((prev) => 
+        prev === chefSpecials.length - 1 ? 0 : prev + 1
+      );
+    }, 5000); // Change slide every 5 seconds
+
+    return () => clearInterval(interval);
+  }, [chefSpecials.length]);
+
+  const handleDotClick = (index: number) => {
+    setCurrentSpecialIndex(index);
+  };
+
   const fetchMeals = async () => {
     try {
       const today = new Date().toISOString().split('T')[0];
       
+      // Fetch all meals available from today onwards
       const { data, error } = await supabase
         .from('meals')
         .select('*')
@@ -33,9 +50,17 @@ export default function HomePage() {
       if (error) throw error;
       
       if (data && data.length > 0) {
-        setFeaturedMeal(data[0]);
-        setMeals(data.slice(1)); // Remove featured meal from the grid
+        // Separate chef specials from regular meals
+        const specials = data.filter(meal => meal.is_chef_special === true);
+        const regular = data.filter(meal => !meal.is_chef_special);
+        
+        console.log('Chef Specials:', specials); // Debug log
+        console.log('Regular Meals:', regular); // Debug log
+        
+        setChefSpecials(specials);
+        setMeals(regular);
       } else {
+        setChefSpecials([]);
         setMeals([]);
       }
     } catch (error) {
@@ -45,25 +70,21 @@ export default function HomePage() {
     }
   };
 
-  const handlePrevImage = () => {
-    if (featuredMeal?.image_urls?.length) {
-      setCurrentImageIndex((prev) => 
-        prev === 0 ? featuredMeal.image_urls.length - 1 : prev - 1
-      );
-    }
+  const handlePrevSpecial = () => {
+    setCurrentSpecialIndex((prev) => 
+      prev === 0 ? chefSpecials.length - 1 : prev - 1
+    );
   };
 
-  const handleNextImage = () => {
-    if (featuredMeal?.image_urls?.length) {
-      setCurrentImageIndex((prev) => 
-        prev === featuredMeal.image_urls.length - 1 ? 0 : prev + 1
-      );
-    }
+  const handleNextSpecial = () => {
+    setCurrentSpecialIndex((prev) => 
+      prev === chefSpecials.length - 1 ? 0 : prev + 1
+    );
   };
 
-  const handleBookFeatured = () => {
-    if (featuredMeal) {
-      window.location.href = `/book/${featuredMeal.id}`;
+  const handleBookSpecial = () => {
+    if (chefSpecials[currentSpecialIndex]) {
+      window.location.href = `/book/${chefSpecials[currentSpecialIndex].id}`;
     }
   };
 
@@ -105,91 +126,115 @@ export default function HomePage() {
         </div>
       </header>
       <main className="flex-1 pt-14">
-        {featuredMeal ? (
-          <section className="w-full py-12 px-4 bg-gray-100 relative">
+        {chefSpecials.length > 0 ? (
+          <section className="w-full py-8 px-4 bg-gray-100 relative">
             <div className="absolute inset-0 bg-fixed bg-cover bg-center animate-pulse" style={{ backgroundImage: 'url(/path-to-minimalist-background.jpg)' }}></div>
             <div className="container mx-auto max-w-7xl relative z-10">
-              <div className="grid md:grid-cols-2 gap-8 items-center">
-                {/* Left side - Meal Details */}
-                <div className="space-y-6">
-                  <div className="space-y-4">
-                    <span className="text-emerald-600 font-semibold">Chef Special</span>
-                    <h1 className="text-4xl md:text-6xl font-bold">
-                      {featuredMeal.title}
-                    </h1>
-                    <p className="text-gray-600 text-lg">
-                      {featuredMeal.description}
-                    </p>
-                    <div className="flex flex-col gap-2 text-gray-600">
-                      <p className="flex items-center gap-2">
-                        <span className="font-medium">Available:</span> 
-                        {formatDate(featuredMeal.date_available)}
+              {/* Reduced padding-bottom from pb-20 to pb-12 */}
+              <div className="pb-12">
+                <div className="grid md:grid-cols-2 gap-8 items-center">
+                  {/* Left side - Meal Details */}
+                  <div className="space-y-6">
+                    <div className="space-y-4">
+                      <span className="text-emerald-600 font-semibold">Chef Special</span>
+                      <h1 className="text-4xl md:text-6xl font-bold">
+                        {chefSpecials[currentSpecialIndex].title}
+                      </h1>
+                      <p className="text-gray-600 text-lg">
+                        {chefSpecials[currentSpecialIndex].description}
                       </p>
-                      <p className="flex items-center gap-2">
-                        <span className="font-medium">Pick-up:</span> 
-                        {featuredMeal.time_available}
-                      </p>
-                      {featuredMeal.size && (
+                      <div className="flex flex-col gap-2 text-gray-600">
                         <p className="flex items-center gap-2">
-                          <span className="font-medium">Size:</span> 
-                          {featuredMeal.size}
+                          <span className="font-medium">Available:</span> 
+                          {formatDate(chefSpecials[currentSpecialIndex].date_available)}
                         </p>
-                      )}
-                      <p className="flex items-center gap-2">
-                        <span className="font-medium">Price:</span>
-                        <span className="text-xl font-bold text-emerald-600">
-                          ${featuredMeal.price.toFixed(2)}
-                        </span>
-                      </p>
+                        <p className="flex items-center gap-2">
+                          <span className="font-medium">Pick-up:</span> 
+                          {chefSpecials[currentSpecialIndex].time_available}
+                        </p>
+                        {chefSpecials[currentSpecialIndex].size && (
+                          <p className="flex items-center gap-2">
+                            <span className="font-medium">Size:</span> 
+                            {chefSpecials[currentSpecialIndex].size}
+                          </p>
+                        )}
+                        <p className="flex items-center gap-2">
+                          <span className="font-medium">Type:</span>
+                          <div className="flex gap-2">
+                            {chefSpecials[currentSpecialIndex].meal_types.map((type, index) => (
+                              <span key={index} className="inline-flex items-center px-2 py-1 rounded-full text-sm bg-emerald-100 text-emerald-800">
+                                {type.charAt(0).toUpperCase() + type.slice(1)}
+                              </span>
+                            ))}
+                          </div>
+                        </p>
+                        <p className="flex items-center gap-2">
+                          <span className="font-medium">Price:</span>
+                          <span className="text-xl font-bold text-emerald-600">
+                            ${chefSpecials[currentSpecialIndex].price.toFixed(2)}
+                            {chefSpecials[currentSpecialIndex].includes_gst && 
+                              <span className="text-sm font-normal ml-1">(Inc. GST)</span>
+                            }
+                          </span>
+                        </p>
+                      </div>
+                      <button
+                        onClick={handleBookSpecial}
+                        className="mt-4 bg-emerald-600 text-white px-8 py-3 rounded-md hover:bg-emerald-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                        disabled={chefSpecials[currentSpecialIndex].available_quantity <= 0}
+                      >
+                        {chefSpecials[currentSpecialIndex].available_quantity > 0 ? 'Book Now' : 'Sold Out'}
+                      </button>
                     </div>
-                    <button
-                      onClick={handleBookFeatured}
-                      className="mt-4 bg-emerald-600 text-white px-8 py-3 rounded-md hover:bg-emerald-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
-                      disabled={featuredMeal.available_quantity <= 0}
-                    >
-                      {featuredMeal.available_quantity > 0 ? 'Book Now' : 'Sold Out'}
-                    </button>
+                  </div>
+
+                  {/* Right side - Image */}
+                  <div className="relative h-[500px] w-full">
+                    {chefSpecials[currentSpecialIndex].image_urls?.[0] && (
+                      <Image
+                        src={chefSpecials[currentSpecialIndex].image_urls[0]}
+                        alt={chefSpecials[currentSpecialIndex].title}
+                        fill
+                        priority
+                        quality={100}
+                        className="object-cover rounded-lg"
+                      />
+                    )}
                   </div>
                 </div>
-
-                {/* Right side - Image */}
-                <div className="relative h-[500px] w-full">
-                  {featuredMeal.image_urls?.[currentImageIndex] && (
-                    <Image
-                      src={featuredMeal.image_urls[currentImageIndex]}
-                      alt={`${featuredMeal.title} - Image ${currentImageIndex + 1}`}
-                      fill
-                      priority
-                      quality={100}
-                      className="object-cover rounded-lg"
-                      onError={() => {
-                        console.error('Image failed to load:', featuredMeal.image_urls[currentImageIndex]);
-                      }}
-                    />
-                  )}
-                  {featuredMeal.image_urls?.length > 1 && (
-                    <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-4">
-                      <button 
-                        onClick={handlePrevImage}
-                        className="p-2 rounded-full bg-white/80 shadow-md hover:bg-white transition-colors"
-                      >
-                        <ArrowLeft className="h-6 w-6 text-emerald-600" />
-                      </button>
-                      <button 
-                        onClick={handleNextImage}
-                        className="p-2 rounded-full bg-white/80 shadow-md hover:bg-white transition-colors"
-                      >
-                        <ArrowLeft className="h-6 w-6 text-emerald-600 rotate-180" />
-                      </button>
-                    </div>
-                  )}
-                </div>
               </div>
+
+              {/* Navigation dots and counter - Positioned below the content */}
+              {chefSpecials.length > 1 && (
+                <div className="absolute left-0 right-0 -bottom-6 flex flex-col items-center gap-2">
+                  {/* Dots for navigation */}
+                  <div className="flex justify-center gap-2">
+                    {chefSpecials.map((_, index) => (
+                      <button
+                        key={index}
+                        onClick={() => handleDotClick(index)}
+                        className={`w-2 h-2 rounded-full transition-all ${
+                          index === currentSpecialIndex
+                            ? 'bg-emerald-600 w-4' // Make active dot wider
+                            : 'bg-white/80 hover:bg-white'
+                        }`}
+                        aria-label={`Go to slide ${index + 1}`}
+                      />
+                    ))}
+                  </div>
+                  {/* Counter text */}
+                  <div className="bg-black/20 backdrop-blur-sm px-3 py-1 rounded-full">
+                    <span className="text-white text-sm">
+                      {currentSpecialIndex + 1} of {chefSpecials.length}
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
           </section>
         ) : (
           <div className="w-full py-12 px-4 text-center">
-            No featured meal available
+            No featured meals available
           </div>
         )}
 

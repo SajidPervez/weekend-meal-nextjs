@@ -61,6 +61,8 @@ export default function AdminMealsPage() {
         description: data.description,
         image_urls: data.image_urls,
         price: data.price,
+        includes_gst: data.includes_gst,
+        gst_rate: data.gst_rate,
         available_quantity: data.available_quantity,
         date_available: data.date_available,
         time_available: data.time_available,
@@ -69,6 +71,7 @@ export default function AdminMealsPage() {
         available_for: data.available_for ? data.available_for.split(',') : [],
         availability_date: data.availability_date,
         recurring_pattern: data.recurring_pattern ? JSON.parse(data.recurring_pattern) : null,
+        is_chef_special: data.is_chef_special,
       };
 
       if (editingMeal?.id) {
@@ -104,11 +107,13 @@ export default function AdminMealsPage() {
   // Convert Meal to MealFormData
   const convertMealToFormData = (meal: Meal): Partial<MealFormData> => {
     return {
-      id: meal.id.toString(), // Convert number to string
+      id: meal.id.toString(),
       title: meal.title,
       description: meal.description,
       image_urls: meal.image_urls,
       price: meal.price,
+      includes_gst: meal.includes_gst,
+      gst_rate: meal.gst_rate,
       available_quantity: meal.available_quantity,
       date_available: meal.date_available,
       time_available: meal.time_available,
@@ -117,6 +122,7 @@ export default function AdminMealsPage() {
       available_for: meal.available_for ? meal.available_for.join(',') : null,
       availability_date: meal.availability_date,
       recurring_pattern: meal.recurring_pattern ? JSON.stringify(meal.recurring_pattern) : null,
+      is_chef_special: meal.is_chef_special,
     };
   };
 
