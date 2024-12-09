@@ -209,6 +209,11 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session) {
   }
 }
 
+export const runtime = 'edge';
+export const dynamic = 'force-dynamic';
+export const preferredRegion = 'auto';
+
+// This is needed for Stripe webhook to work - it needs the raw body
 export async function POST(request: Request) {
   try {
     const signature = headers().get('stripe-signature');
@@ -285,10 +290,3 @@ export async function POST(request: Request) {
     );
   }
 }
-
-// Configure the endpoint to accept raw body
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
