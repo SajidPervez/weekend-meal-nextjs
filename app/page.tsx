@@ -5,12 +5,14 @@ import { MapPin, ArrowLeft, Utensils } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { supabase } from '@/lib/supabase';
-import type { Meal } from '@/types/meal';
+import type { Meal, MealType } from '@/types/meal';
 import MealCard from '@/components/ui/MealCard';
+import MealFilters from '@/components/ui/MealFilters';
 
 export default function HomePage() {
   const [meals, setMeals] = useState<Meal[]>([]);
   const [featuredMeal, setFeaturedMeal] = useState<Meal | null>(null);
+  const [selectedTypes, setSelectedTypes] = useState<MealType[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
@@ -74,6 +76,12 @@ export default function HomePage() {
       year: 'numeric'
     });
   };
+
+  const filteredMeals = selectedTypes.length > 0
+    ? meals.filter(meal => 
+        meal.meal_types.some(type => selectedTypes.includes(type))
+      )
+    : meals;
 
   if (loading) {
     return (
@@ -187,15 +195,29 @@ export default function HomePage() {
 
         <section className="w-full py-12 bg-gray-50">
           <div className="container mx-auto px-4">
-            <h2 className="text-3xl font-bold text-center mb-8">Discover Your Next Meal</h2>
+            <h2 className="text-3xl font-bold text-gray-900 mb-8">Discover Your Next Meal</h2>
             <p className="text-center text-lg mb-8">Browse our selection of delicious, chef-prepared meals</p>
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {meals.map((meal) => (
-                <div key={meal.id} className="bg-white rounded-lg shadow-md overflow-hidden">
-                  <MealCard meal={meal} />
-                </div>
-              ))}
-            </div>
+            <MealFilters
+              selectedTypes={selectedTypes}
+              onTypeChange={setSelectedTypes}
+            />
+            {filteredMeals.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-gray-500 text-lg">
+                  {selectedTypes.length > 0
+                    ? 'No meals found matching the selected filters.'
+                    : 'No meals available at the moment.'}
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredMeals.map((meal) => (
+                  <div key={meal.id} className="bg-white rounded-lg shadow-md overflow-hidden">
+                    <MealCard meal={meal} />
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </section>
       </main>

@@ -2,7 +2,7 @@
 'use client';
 
 import { Card } from './card';
-import { Meal } from "@/types/meal";
+import { Meal, MealType } from "@/types/meal";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from 'react';
 
@@ -11,6 +11,14 @@ interface MealCardProps {
   onEdit?: (id: number) => void;
   onDelete?: (id: number) => void;
 }
+
+const mealTypeIcons: Record<MealType, string> = {
+  vegan: '🌱',
+  vegetarian: '🥗',
+  chicken: '🍗',
+  lamb: '🐑',
+  beef: '🥩'
+};
 
 export default function MealCard({ meal, onEdit, onDelete }: MealCardProps) {
   const router = useRouter();
@@ -70,8 +78,23 @@ export default function MealCard({ meal, onEdit, onDelete }: MealCardProps) {
       </div>
       <div className="p-4">
         <div className="flex justify-between items-start gap-2 mb-2">
-          <h3 className="text-lg font-semibold leading-tight">{meal.title}</h3>
-          <p className="text-lg font-bold text-emerald-600">${meal.price.toFixed(2)}</p>
+          <div className="flex items-center gap-2">
+            <h3 className="text-lg font-semibold text-gray-900">{meal.title}</h3>
+            <div className="flex gap-1">
+              {meal.meal_types.map((type) => (
+                <span
+                  key={type}
+                  className="inline-flex items-center text-lg cursor-help"
+                  title={type.charAt(0).toUpperCase() + type.slice(1)}
+                >
+                  {mealTypeIcons[type]}
+                </span>
+              ))}
+            </div>
+          </div>
+          <span className="text-lg font-semibold text-emerald-600">
+            ${meal.price.toFixed(2)}
+          </span>
         </div>
         <p className="text-sm text-gray-600 mb-3 line-clamp-2">{meal.description}</p>
         <div className="space-y-1 text-sm text-gray-600 mb-4">

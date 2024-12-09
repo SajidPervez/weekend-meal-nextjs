@@ -1,3 +1,5 @@
+export type MealType = 'vegan' | 'vegetarian' | 'chicken' | 'lamb' | 'beef';
+
 export type Meal = {
   id: number;
   title: string;
@@ -14,6 +16,7 @@ export type Meal = {
     type: 'none' | 'weekly' | 'monthly';
     days: string[];
   };
+  meal_types: MealType[];
   created_at?: string;
   updated_at?: string;
 }
@@ -31,4 +34,5 @@ export interface MealFormData {
   available_for: string | null;
   availability_date: string | null;
   recurring_pattern: string | null;
+  meal_types: MealType[];
 }

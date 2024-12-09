@@ -1,4 +1,10 @@
-import { NextResponse } from 'next/server';
+export default function SuccessPage() {
+  return (
+    <Suspense fallback={...}>
+      <SuccessContent />
+    </Suspense>
+  );
+}import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { type NextRequest } from 'next/server';
 

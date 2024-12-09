@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase';
 import { v4 as uuidv4 } from 'uuid';
 import type { MealFormData } from '@/types/meal';
 import { useRouter } from 'next/navigation';
+import { Meal, MealType } from '@/types/meal';
 
 interface MealFormProps {
   onSubmit: (data: MealFormData) => void;
@@ -19,6 +20,17 @@ export default function MealForm({ onSubmit, initialData }: MealFormProps) {
   const [previewUrls, setPreviewUrls] = useState<string[]>(
     initialData?.image_urls || []
   );
+  const [selectedMealTypes, setSelectedMealTypes] = useState<MealType[]>(
+    initialData?.meal_types || []
+  );
+
+  const mealTypes: { value: MealType; label: string; icon: string }[] = [
+    { value: 'vegan', label: 'Vegan', icon: '🌱' },
+    { value: 'vegetarian', label: 'Vegetarian', icon: '🥗' },
+    { value: 'chicken', label: 'Chicken', icon: '🍗' },
+    { value: 'lamb', label: 'Lamb', icon: '🐑' },
+    { value: 'beef', label: 'Beef', icon: '🥩' },
+  ];
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -79,6 +91,7 @@ export default function MealForm({ onSubmit, initialData }: MealFormProps) {
         date_available: formData.get('date_available') as string,
         time_available: formData.get('time_available') as string,
         size: formData.get('size') as string,
+        meal_types: selectedMealTypes,
         image_urls: imageUrls,
         available_for: null,
         availability_date: null,
@@ -242,6 +255,37 @@ export default function MealForm({ onSubmit, initialData }: MealFormProps) {
           defaultValue={initialData?.size ?? ''}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500"
         />
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Meal Types
+          </label>
+          <div className="mt-2 space-y-2">
+            {mealTypes.map((type) => (
+              <label key={type.value} className="inline-flex items-center mr-4">
+                <input
+                  type="checkbox"
+                  checked={selectedMealTypes.includes(type.value)}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedMealTypes([...selectedMealTypes, type.value]);
+                    } else {
+                      setSelectedMealTypes(
+                        selectedMealTypes.filter((t) => t !== type.value)
+                      );
+                    }
+                  }}
+                  className="form-checkbox h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded"
+                />
+                <span className="ml-2">
+                  {type.icon} {type.label}
+                </span>
+              </label>
+            ))}
+          </div>
+        </div>
       </div>
 
       <button

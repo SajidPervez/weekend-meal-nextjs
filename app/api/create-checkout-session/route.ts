@@ -64,7 +64,7 @@ export async function POST(req: Request) {
       payment_method_types: ['card'],
       line_items: items.map((item) => ({
         price_data: {
-          currency: 'usd',
+          currency: 'aud',
           product_data: {
             name: item.meal.title,
             description: item.meal.description,
