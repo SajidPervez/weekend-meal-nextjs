@@ -85,6 +85,7 @@ export default function MealForm({ onSubmit, initialData }: MealFormProps) {
     try {
       const formData = new FormData(e.currentTarget);
       const imageUrls: string[] = [...previewUrls];
+      const basePrice = parseFloat(formData.get('price') as string);
 
       // Upload new images
       for (const image of images) {
