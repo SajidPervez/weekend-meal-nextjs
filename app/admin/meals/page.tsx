@@ -1,19 +1,4 @@
-<div className="col-span-6 sm:col-span-3">
-  <label htmlFor="price" className="block text-sm font-medium text-gray-700">
-    Base Price ($)
-  </label>
-  <input
-    type="number"
-    step="0.01"
-    min="0"
-    name="price"
-    id="price"
-    value={basePrice}
-    onChange={handlePriceChange}
-    className="mt-1 focus:ring-emerald-500 focus:border-emerald-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
-    required
-  />
-</div>'use client';
+'use client';
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
