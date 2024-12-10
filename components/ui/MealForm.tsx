@@ -24,7 +24,11 @@ export default function MealForm({ onSubmit, initialData }: MealFormProps) {
     initialData?.meal_types || []
   );
   const [includesGst, setIncludesGst] = useState(initialData?.includes_gst || false);
-  const [basePrice, setBasePrice] = useState<number>(initialData?.price ? Number(initialData.price) : 0);
+  const getInitialPrice = () => {
+    if (!initialData?.price) return 0;
+    return typeof initialData.price === 'string' ? parseFloat(initialData.price) : initialData.price;
+  };
+  const [basePrice, setBasePrice] = useState<number>(getInitialPrice());
   const [isChefSpecial, setIsChefSpecial] = useState(initialData?.is_chef_special || false);
   const GST_RATE = 0.10; // 10% GST
 
