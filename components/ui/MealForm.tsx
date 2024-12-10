@@ -24,7 +24,7 @@ export default function MealForm({ onSubmit, initialData }: MealFormProps) {
     initialData?.meal_types || []
   );
   const [includesGst, setIncludesGst] = useState(initialData?.includes_gst || false);
-  const [basePrice, setBasePrice] = useState(initialData?.price || 0);
+  const [basePrice, setBasePrice] = useState<number>(initialData?.price || 0);
   const [isChefSpecial, setIsChefSpecial] = useState(initialData?.is_chef_special || false);
   const GST_RATE = 0.10; // 10% GST
 
@@ -219,19 +219,20 @@ export default function MealForm({ onSubmit, initialData }: MealFormProps) {
           Price and GST
         </label>
         <div className="bg-gray-50 p-4 rounded-lg space-y-4">
-          {/* Base Price Input */}
-          <div>
-            <label className="block text-sm text-gray-600 mb-1">
+          {/* Price Input */}
+          <div className="col-span-6 sm:col-span-3">
+            <label htmlFor="price" className="block text-sm font-medium text-gray-700">
               Base Price ($)
             </label>
             <input
               type="number"
-              name="price"
               step="0.01"
               min="0"
+              name="price"
+              id="price"
               value={basePrice}
               onChange={handlePriceChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500"
+              className="mt-1 focus:ring-emerald-500 focus:border-emerald-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
               required
             />
           </div>
@@ -255,14 +256,14 @@ export default function MealForm({ onSubmit, initialData }: MealFormProps) {
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-600">Final Price:</span>
               <span className="text-lg font-semibold text-emerald-600">
-                ${calculateFinalPrice(basePrice).toFixed(2)}
+                ${calculateFinalPrice(Number(basePrice)).toFixed(2)}
                 {includesGst && " (Inc. GST)"}
               </span>
             </div>
             {includesGst && (
               <div className="text-xs text-gray-500 mt-1 flex justify-between">
-                <span>Base Price: ${basePrice.toFixed(2)}</span>
-                <span>GST (10%): ${(basePrice * GST_RATE).toFixed(2)}</span>
+                <span>Base Price: ${Number(basePrice).toFixed(2)}</span>
+                <span>GST (10%): ${(Number(basePrice) * GST_RATE).toFixed(2)}</span>
               </div>
             )}
           </div>
