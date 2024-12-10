@@ -216,76 +216,46 @@ export const preferredRegion = 'auto';
 // This is needed for Stripe webhook to work - it needs the raw body
 export async function POST(request: Request) {
   try {
-    const signature = headers().get('stripe-signature');
-    
-    console.log('🔍 Received webhook request');
-    console.log('📝 Signature present:', !!signature);
+    const body = await request.text();
+    const sig = headers().get('stripe-signature');
 
-    if (!signature) {
-      console.error('❌ No stripe signature found in headers');
+    if (!sig) {
       return NextResponse.json(
-        { error: 'No stripe signature found' },
+        { error: 'No signature found' },
         { status: 400 }
       );
     }
 
-    if (!process.env.STRIPE_WEBHOOK_SECRET) {
-      console.error('❌ STRIPE_WEBHOOK_SECRET is not configured');
-      return NextResponse.json(
-        { error: 'Webhook secret not configured' },
-        { status: 500 }
-      );
-    }
+    // Use constructEventAsync instead of constructEvent
+    const event = await stripe.webhooks.constructEventAsync(
+      body,
+      sig,
+      process.env.STRIPE_WEBHOOK_SECRET!
+    );
 
-    // Get the raw body
-    const rawBody = await request.text();
-    console.log('📝 Raw body length:', rawBody.length);
+    console.log('🎉 Webhook received! Event type:', event.type);
 
-    try {
-      console.log('🔐 Verifying Stripe signature...');
-      console.log('🔑 Using webhook secret starting with:', process.env.STRIPE_WEBHOOK_SECRET.substring(0, 4));
+    if (event.type === 'checkout.session.completed') {
+      const session = event.data.object as Stripe.Checkout.Session;
+      console.log('💳 Processing checkout session:', session.id);
       
-      const event = stripe.webhooks.constructEvent(
-        rawBody,
-        signature,
-        process.env.STRIPE_WEBHOOK_SECRET
-      );
-
-      console.log('✅ Webhook signature verified');
-      console.log('📦 Event type:', event.type);
-
-      if (event.type === 'checkout.session.completed') {
-        const session = event.data.object as Stripe.Checkout.Session;
-        console.log('🔍 Checkout Session ID:', session.id);
-        console.log('📦 Raw metadata:', session.metadata);
-        
-        try {
-          await handleCheckoutComplete(session);
-          console.log('✅ Successfully processed checkout completion');
-        } catch (processError) {
-          console.error('❌ Error processing checkout:', processError);
-          // Return 500 to trigger a retry from Stripe
-          return NextResponse.json(
-            { error: 'Error processing checkout', details: processError instanceof Error ? processError.message : 'Unknown error' },
-            { status: 500 }
-          );
-        }
+      try {
+        await handleCheckoutComplete(session);
+        return NextResponse.json({ received: true });
+      } catch (error) {
+        console.error('❌ Error processing checkout session:', error);
+        return NextResponse.json(
+          { error: 'Error processing checkout session' },
+          { status: 500 }
+        );
       }
-
-      return NextResponse.json({ received: true });
-    } catch (err) {
-      console.error('❌ Error constructing webhook event:', err);
-      console.error('🔑 Secret prefix used:', process.env.STRIPE_WEBHOOK_SECRET?.slice(0, 4));
-      console.error('📝 Signature received:', signature);
-      return NextResponse.json(
-        { error: 'Webhook signature verification failed', details: err instanceof Error ? err.message : 'Unknown error' },
-        { status: 400 }
-      );
     }
+
+    return NextResponse.json({ received: true });
   } catch (err) {
-    console.error('❌ Unexpected webhook error:', err);
+    console.error('❌ Error:', err);
     return NextResponse.json(
-      { error: 'Webhook handler failed', details: err instanceof Error ? err.message : 'Unknown error' },
+      { error: 'Webhook handler failed' },
       { status: 400 }
     );
   }
