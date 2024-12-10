@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabase';
 import { v4 as uuidv4 } from 'uuid';
 import type { MealFormData } from '@/types/meal';
 import { useRouter } from 'next/navigation';
-import { Meal, MealType } from '@/types/meal';
+import { MealType } from '@/types/meal';
 
 interface MealFormProps {
   onSubmit: (data: MealFormData) => void;

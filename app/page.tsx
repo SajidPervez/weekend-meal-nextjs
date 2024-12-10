@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { MapPin, ArrowLeft, Utensils } from "lucide-react";
+import { MapPin, Utensils } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { supabase } from '@/lib/supabase';
@@ -18,23 +18,38 @@ export default function HomePage() {
 
   useEffect(() => {
     fetchMeals();
-  }, []);
-
-  useEffect(() => {
-    if (chefSpecials.length <= 1) return;
-
+    
+    // Start auto-scroll for chef specials
     const interval = setInterval(() => {
       setCurrentSpecialIndex((prev) => 
         prev === chefSpecials.length - 1 ? 0 : prev + 1
       );
-    }, 5000); // Change slide every 5 seconds
+    }, 5000);
 
     return () => clearInterval(interval);
   }, [chefSpecials.length]);
 
-  const handleDotClick = (index: number) => {
-    setCurrentSpecialIndex(index);
+  const handleBookSpecial = () => {
+    if (chefSpecials[currentSpecialIndex]) {
+      window.location.href = `/book/${chefSpecials[currentSpecialIndex].id}`;
+    }
   };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      weekday: 'short',
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
+    });
+  };
+
+  const filteredMeals = selectedTypes.length > 0
+    ? meals.filter(meal => 
+        meal.meal_types.some(type => selectedTypes.includes(type))
+      )
+    : meals;
 
   const fetchMeals = async () => {
     try {
@@ -69,40 +84,6 @@ export default function HomePage() {
       setLoading(false);
     }
   };
-
-  const handlePrevSpecial = () => {
-    setCurrentSpecialIndex((prev) => 
-      prev === 0 ? chefSpecials.length - 1 : prev - 1
-    );
-  };
-
-  const handleNextSpecial = () => {
-    setCurrentSpecialIndex((prev) => 
-      prev === chefSpecials.length - 1 ? 0 : prev + 1
-    );
-  };
-
-  const handleBookSpecial = () => {
-    if (chefSpecials[currentSpecialIndex]) {
-      window.location.href = `/book/${chefSpecials[currentSpecialIndex].id}`;
-    }
-  };
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      weekday: 'short',
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric'
-    });
-  };
-
-  const filteredMeals = selectedTypes.length > 0
-    ? meals.filter(meal => 
-        meal.meal_types.some(type => selectedTypes.includes(type))
-      )
-    : meals;
 
   if (loading) {
     return (
@@ -212,7 +193,7 @@ export default function HomePage() {
                     {chefSpecials.map((_, index) => (
                       <button
                         key={index}
-                        onClick={() => handleDotClick(index)}
+                        onClick={() => setCurrentSpecialIndex(index)}
                         className={`w-2 h-2 rounded-full transition-all ${
                           index === currentSpecialIndex
                             ? 'bg-emerald-600 w-4' // Make active dot wider
