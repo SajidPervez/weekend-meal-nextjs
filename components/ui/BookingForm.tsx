@@ -27,14 +27,18 @@ export default function BookingForm({ meal }: BookingFormProps) {
     });
   };
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     addToCart(meal, quantity);
+    // Wait a bit to ensure the cart state is saved
+    await new Promise(resolve => setTimeout(resolve, 100));
     setShowSuccess(true);
   };
 
-  const handleAddAnother = () => {
+  const handleAddAnother = async () => {
     addToCart(meal, quantity);
-    router.push('/');
+    // Wait a bit to ensure the cart state is saved
+    await new Promise(resolve => setTimeout(resolve, 100));
+    router.replace('/', { scroll: false });
   };
 
   if (showSuccess) {
@@ -44,14 +48,20 @@ export default function BookingForm({ meal }: BookingFormProps) {
           <h2 className="text-2xl font-bold text-emerald-600 mb-4">Added to Cart!</h2>
           <div className="space-y-4">
             <button
-              onClick={() => router.push('/')}
+              onClick={async () => {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                router.replace('/', { scroll: false });
+              }}
               className="w-full bg-emerald-600 text-white py-3 px-4 rounded-md hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2"
             >
               <Plus className="w-5 h-5" />
               Add Another Meal
             </button>
             <button
-              onClick={() => router.push('/checkout')}
+              onClick={async () => {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                router.replace('/checkout', { scroll: false });
+              }}
               className="w-full border border-emerald-600 text-emerald-600 py-3 px-4 rounded-md hover:bg-emerald-50 transition-colors"
             >
               Proceed to Checkout

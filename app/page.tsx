@@ -133,6 +133,14 @@ export default function HomePage() {
                           <span className="font-medium">Pick-up:</span> 
                           {chefSpecials[currentSpecialIndex].time_available}
                         </p>
+                        <p className="flex items-center gap-2">
+                          <span className="font-medium">Quantity:</span> 
+                          <span className={chefSpecials[currentSpecialIndex].available_quantity <= 0 ? "text-red-600" : "text-emerald-600"}>
+                            {chefSpecials[currentSpecialIndex].available_quantity <= 0 
+                              ? "Sold Out" 
+                              : `${chefSpecials[currentSpecialIndex].available_quantity} remaining`}
+                          </span>
+                        </p>
                         {chefSpecials[currentSpecialIndex].size && (
                           <p className="flex items-center gap-2">
                             <span className="font-medium">Size:</span> 
