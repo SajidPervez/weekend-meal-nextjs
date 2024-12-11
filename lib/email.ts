@@ -6,10 +6,8 @@ if (!process.env.RESEND_API_KEY) {
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-// For development, use a verified Resend domain
-const FROM_EMAIL = process.env.NODE_ENV === 'production' 
-  ? 'Weekend Meals <orders@weekendmeal.com>'
-  : 'onboarding@resend.dev';
+// For development and production (until domain is verified)
+const FROM_EMAIL = 'Tasty Bites <onboarding@resend.dev>';
 
 export async function sendReceiptEmail(
   to: string,
