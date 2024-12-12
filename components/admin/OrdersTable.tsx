@@ -444,9 +444,9 @@ export default function OrdersTable() {
       }
 
       // Add meal data to order items
-      const processedNewOrders = newOrdersData?.map(order => ({
+      const processedNewOrders = newOrdersData?.map((order: Order) => ({
         ...order,
-        order_items: order.order_items.map(item => ({
+        order_items: order.order_items.map((item: OrderItem) => ({
           ...item,
           meal: meals.get(item.meal_id)
         }))
@@ -482,9 +482,9 @@ export default function OrdersTable() {
       }
 
       // Add meal data to order items
-      const processedHistoryOrders = historyOrdersData?.map(order => ({
+      const processedHistoryOrders = historyOrdersData?.map((order: Order) => ({
         ...order,
-        order_items: order.order_items.map(item => ({
+        order_items: order.order_items.map((item: OrderItem) => ({
           ...item,
           meal: meals.get(item.meal_id)
         }))
