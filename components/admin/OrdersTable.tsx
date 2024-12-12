@@ -37,9 +37,7 @@ interface OrdersTableSectionProps {
   setCurrentPage: (page: number) => void;
   searchTerm: string;
   setSearchTerm: (term: string) => void;
-  appliedSearchTerm: string;
   setAppliedSearchTerm: (term: string) => void;
-  isLoading: boolean;
   isProcessing: number | null;
   updateOrderStatus: (orderId: number, newStatus: string) => void;
   handleRefund: (orderId: number) => void;
@@ -54,9 +52,7 @@ const OrdersTableSection = ({
   setCurrentPage,
   searchTerm,
   setSearchTerm,
-  appliedSearchTerm,
   setAppliedSearchTerm,
-  isLoading,
   isProcessing,
   updateOrderStatus,
   handleRefund,
@@ -557,9 +553,7 @@ export default function OrdersTable() {
           setCurrentPage={setNewOrdersPage}
           searchTerm={newOrdersSearch}
           setSearchTerm={setNewOrdersSearch}
-          appliedSearchTerm={appliedNewOrdersSearch}
           setAppliedSearchTerm={setAppliedNewOrdersSearch}
-          isLoading={isLoading}
           isProcessing={isProcessing}
           updateOrderStatus={updateOrderStatus}
           handleRefund={handleRefund}
@@ -577,9 +571,7 @@ export default function OrdersTable() {
           setCurrentPage={setHistoryOrdersPage}
           searchTerm={historyOrdersSearch}
           setSearchTerm={setHistoryOrdersSearch}
-          appliedSearchTerm={appliedHistoryOrdersSearch}
           setAppliedSearchTerm={setAppliedHistoryOrdersSearch}
-          isLoading={isLoading}
           isProcessing={isProcessing}
           updateOrderStatus={updateOrderStatus}
           handleRefund={handleRefund}
