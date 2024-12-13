@@ -1,5 +1,35 @@
 import { NextResponse } from 'next/server';
 
+interface FacebookPage {
+  id: string;
+  name: string;
+  access_token: string;
+}
+
+interface FacebookReview {
+  id: string;
+  reviewer?: {
+    name: string;
+    id: string;
+  };
+  rating: number;
+  review_text?: string;
+  created_time: string;
+}
+
+interface FacebookError {
+  message: string;
+  type: string;
+  code: number;
+  error_subcode?: number;
+  fbtrace_id: string;
+}
+
+interface FacebookResponse<T> {
+  data?: T[];
+  error?: FacebookError;
+}
+
 export async function GET() {
   const pageId = process.env.NEXT_PUBLIC_FACEBOOK_PAGE_ID;
   const accessToken = process.env.FACEBOOK_ACCESS_TOKEN;
@@ -25,21 +55,21 @@ export async function GET() {
     const pagesResponse = await fetch(
       `https://graph.facebook.com/v19.0/me/accounts?access_token=${accessToken}`
     );
-    const pagesData = await pagesResponse.json();
+    const pagesData = await pagesResponse.json() as FacebookResponse<FacebookPage>;
 
     console.log('Pages response:', pagesData);
 
     if (pagesResponse.ok && pagesData.data) {
-      const pages = pagesData.data.map((page: any) => ({
+      const pages = pagesData.data.map((page: FacebookPage) => ({
         id: page.id,
         name: page.name,
         access_token: page.access_token
       }));
       
-      console.log('Available pages:', pages.map((p: any) => ({ id: p.id, name: p.name })));
+      console.log('Available pages:', pages.map(p => ({ id: p.id, name: p.name })));
       
       // Try to find our page
-      const targetPage = pages.find((p: any) => p.id === pageId);
+      const targetPage = pages.find(p => p.id === pageId);
       if (targetPage) {
         console.log('Found target page:', targetPage.name);
         
@@ -48,13 +78,13 @@ export async function GET() {
         
         console.log('Fetching reviews...');
         const response = await fetch(url);
-        const responseData = await response.json();
+        const responseData = await response.json() as FacebookResponse<FacebookReview>;
 
         if (!response.ok) {
           console.error('Facebook API Error:', responseData);
           return NextResponse.json({ 
             error: `Failed to fetch Facebook reviews: ${responseData.error?.message || JSON.stringify(responseData)}`,
-            availablePages: pages.map((p: any) => ({ id: p.id, name: p.name }))
+            availablePages: pages.map(p => ({ id: p.id, name: p.name }))
           }, { status: 500 });
         }
 
@@ -63,7 +93,7 @@ export async function GET() {
           return NextResponse.json({ data: [] });
         }
 
-        const reviews = responseData.data.map((review: any) => ({
+        const reviews = responseData.data.map(review => ({
           id: review.id || Math.random().toString(),
           reviewer: {
             name: review.reviewer?.name || 'Anonymous',
@@ -80,7 +110,7 @@ export async function GET() {
         console.log('Target page not found among available pages');
         return NextResponse.json({ 
           error: 'Page ID not found in your managed pages',
-          availablePages: pages.map((p: any) => ({ id: p.id, name: p.name }))
+          availablePages: pages.map(p => ({ id: p.id, name: p.name }))
         }, { status: 404 });
       }
     } else {

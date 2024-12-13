@@ -76,7 +76,7 @@ export default function FacebookReviews() {
           <h2 className="text-3xl font-bold text-gray-900 mb-4">What Our Customers Say</h2>
           <p className="text-gray-600 max-w-2xl mx-auto">
             Read what our customers have to say about their experience with our meal service.
-            We're proud to serve our community with delicious, healthy meals.
+            We&apos;re proud to serve our community with delicious, healthy meals.
           </p>
         </div>
 
