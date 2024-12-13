@@ -27,6 +27,29 @@ interface Order {
   order_items: OrderItem[];
 }
 
+interface OrderItemResponse {
+  id: number;
+  order_id: number;
+  meal_id: string;
+  quantity: number;
+  price: number;
+  pickup_date: string;
+  pickup_time: string;
+  created_at: string;
+}
+
+interface OrderResponse {
+  id: number;
+  created_at: string;
+  status: string;
+  total_amount: number;
+  customer_email: string;
+  customer_phone: string;
+  session_id?: string;
+  payment_status: string;
+  order_items: OrderItemResponse[];
+}
+
 const PAGE_SIZE = 10;
 
 interface OrdersTableSectionProps {
@@ -443,9 +466,9 @@ export default function OrdersTable() {
       }
 
       // Add meal details to orders
-      const processedNewOrders = (newOrdersData || []).map(order => ({
+      const processedNewOrders = (newOrdersData || []).map((order: OrderResponse) => ({
         ...order,
-        order_items: order.order_items.map(item => ({
+        order_items: order.order_items.map((item: OrderItemResponse) => ({
           ...item,
           meal: mealsMap.get(item.meal_id) || { id: item.meal_id, title: 'Unknown Meal' }
         }))
@@ -481,9 +504,9 @@ export default function OrdersTable() {
       }
 
       // Add meal details to history orders
-      const processedHistoryOrders = (historyOrdersData || []).map(order => ({
+      const processedHistoryOrders = (historyOrdersData || []).map((order: OrderResponse) => ({
         ...order,
-        order_items: order.order_items.map(item => ({
+        order_items: order.order_items.map((item: OrderItemResponse) => ({
           ...item,
           meal: mealsMap.get(item.meal_id) || { id: item.meal_id, title: 'Unknown Meal' }
         }))
