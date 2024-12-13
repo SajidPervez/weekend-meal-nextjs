@@ -129,6 +129,18 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session) {
   try {
     console.log('Processing checkout session:', session.id);
     
+    // Convert time label to actual time
+    const convertTimeLabel = (label: string): string => {
+      switch (label.toLowerCase()) {
+        case 'lunch':
+          return '12:00:00';
+        case 'dinner':
+          return '18:00:00';
+        default:
+          return label;
+      }
+    };
+    
     // Update meal quantities
     await updateMealQuantities(session);
 
@@ -164,22 +176,26 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session) {
         order_id: orderData.id,
         meal_id: meal.id,
         quantity: meal.quantity,
-        price: meal.price || 0,
-        created_at: new Date().toISOString(),
-        pickup_time: meal.time_available,
-        pickup_date: meal.date_available
+        price: meal.price,
+        pickup_time: convertTimeLabel(meal.time_available),
+        pickup_date: meal.date_available,
+        created_at: new Date().toISOString()
       }));
 
-      const { error: itemsError } = await webhookClient
+      console.log('Order items to be created:', JSON.stringify(orderItems, null, 2));
+
+      const { data: orderItemsData, error: itemsError } = await webhookClient
         .from('order_items')
-        .insert(orderItems);
+        .insert(orderItems)
+        .select();
 
       if (itemsError) {
         console.error('Failed to create order items:', itemsError);
+        console.error('Full error:', JSON.stringify(itemsError, null, 2));
         throw itemsError;
       }
 
-      console.log('Order items created successfully');
+      console.log('Order items created successfully:', JSON.stringify(orderItemsData, null, 2));
     }
 
     // Send confirmation email

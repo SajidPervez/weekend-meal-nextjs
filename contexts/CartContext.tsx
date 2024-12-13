@@ -21,22 +21,25 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
-  const [items, setItems] = useState<CartItem[]>(() => {
-    // Try to get initial cart items from localStorage
-    if (typeof window !== 'undefined') {
-      const savedCart = localStorage.getItem('cart');
-      return savedCart ? JSON.parse(savedCart) : [];
-    }
-    return [];
-  });
+  const [items, setItems] = useState<CartItem[]>([]);
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // Initialize cart from localStorage after component mounts
+  useEffect(() => {
+    const savedCart = localStorage.getItem('cart');
+    if (savedCart) {
+      setItems(JSON.parse(savedCart));
+    }
+    setIsInitialized(true);
+  }, []);
 
   // Update localStorage whenever cart items change
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (isInitialized) {  
       localStorage.setItem('cart', JSON.stringify(items));
     }
-  }, [items]);
+  }, [items, isInitialized]);
 
   const addToCart = (meal: Meal, quantity: number) => {
     setItems(currentItems => {

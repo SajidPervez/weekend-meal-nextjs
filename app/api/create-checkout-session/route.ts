@@ -50,12 +50,27 @@ export async function POST(req: Request) {
     console.log('Success URL length:', successUrl.length);
     console.log('Cancel URL length:', cancelUrl.length);
 
+    // Convert time label to actual time
+    const convertTimeLabel = (label: string): string => {
+      switch (label.toLowerCase()) {
+        case 'lunch':
+          return '12:00:00';
+        case 'dinner':
+          return '18:00:00';
+        default:
+          return label;
+      }
+    };
+
     // Store meal details in metadata for the webhook
     const mealDetails = items.map(item => ({
       id: item.meal.id,
       title: item.meal.title,
       quantity: item.quantity,
-      available_quantity: item.meal.available_quantity
+      available_quantity: item.meal.available_quantity,
+      price: item.meal.price,
+      time_available: convertTimeLabel(item.meal.time_available),
+      date_available: item.meal.date_available
     }));
 
     console.log('Creating checkout session with meals:', JSON.stringify(mealDetails, null, 2));

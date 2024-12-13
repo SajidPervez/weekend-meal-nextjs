@@ -4,14 +4,14 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 
 interface Meal {
-  id: number;
+  id: string;
   title: string;
 }
 
 interface OrderItem {
   pickup_date: string;
   pickup_time: string;
-  meal_id: number;
+  meal_id: string;
   meal?: Meal;
 }
 
@@ -375,7 +375,7 @@ export default function OrdersTable() {
     try {
       setIsLoading(true);
 
-      // Fetch all meals first
+      // Fetch all meals first to create a lookup map
       const { data: mealsData, error: mealsError } = await supabase
         .from('meals')
         .select('id, title');
@@ -385,15 +385,14 @@ export default function OrdersTable() {
         throw mealsError;
       }
 
-      const meals = new Map(mealsData?.map(meal => [meal.id, meal]) || []);
+      const mealsMap = new Map(mealsData?.map(meal => [meal.id, meal]) || []);
 
-      // Base query for new orders
+      // Base query for new orders count
       let newOrdersQuery = supabase
         .from('orders')
-        .select('*', { count: 'exact' })
+        .select('*', { count: 'exact', head: true })
         .in('status', ['pending', 'processing']);
 
-      // Add search filter for new orders if search term exists
       if (appliedNewOrdersSearch) {
         newOrdersQuery = newOrdersQuery.or(`customer_email.ilike.%${appliedNewOrdersSearch}%,customer_phone.ilike.%${appliedNewOrdersSearch}%`);
       }
@@ -402,13 +401,12 @@ export default function OrdersTable() {
       const { count: newCount } = await newOrdersQuery;
       setTotalNewOrders(newCount || 0);
 
-      // Base query for history orders
+      // Base query for history orders count
       let historyOrdersQuery = supabase
         .from('orders')
-        .select('*', { count: 'exact' })
+        .select('*', { count: 'exact', head: true })
         .in('status', ['completed', 'cancelled']);
 
-      // Add search filter for history orders if search term exists
       if (appliedHistoryOrdersSearch) {
         historyOrdersQuery = historyOrdersQuery.or(`customer_email.ilike.%${appliedHistoryOrdersSearch}%,customer_phone.ilike.%${appliedHistoryOrdersSearch}%`);
       }
@@ -422,7 +420,8 @@ export default function OrdersTable() {
         .from('orders')
         .select(`
           *,
-          order_items!left (
+          order_items:order_items (
+            id,
             pickup_date,
             pickup_time,
             meal_id
@@ -443,16 +442,15 @@ export default function OrdersTable() {
         throw newOrdersError;
       }
 
-      // Add meal data to order items
-      const processedNewOrders = newOrdersData?.map((order: Order) => ({
+      // Add meal details to orders
+      const processedNewOrders = (newOrdersData || []).map(order => ({
         ...order,
-        order_items: order.order_items.map((item: OrderItem) => ({
+        order_items: order.order_items.map(item => ({
           ...item,
-          meal: meals.get(item.meal_id)
+          meal: mealsMap.get(item.meal_id) || { id: item.meal_id, title: 'Unknown Meal' }
         }))
-      })) || [];
+      }));
 
-      console.log('Processed New Orders:', processedNewOrders);
       setNewOrders(processedNewOrders);
 
       // Fetch paginated history orders with search
@@ -460,7 +458,8 @@ export default function OrdersTable() {
         .from('orders')
         .select(`
           *,
-          order_items!left (
+          order_items:order_items (
+            id,
             pickup_date,
             pickup_time,
             meal_id
@@ -481,16 +480,15 @@ export default function OrdersTable() {
         throw historyOrdersError;
       }
 
-      // Add meal data to order items
-      const processedHistoryOrders = historyOrdersData?.map((order: Order) => ({
+      // Add meal details to history orders
+      const processedHistoryOrders = (historyOrdersData || []).map(order => ({
         ...order,
-        order_items: order.order_items.map((item: OrderItem) => ({
+        order_items: order.order_items.map(item => ({
           ...item,
-          meal: meals.get(item.meal_id)
+          meal: mealsMap.get(item.meal_id) || { id: item.meal_id, title: 'Unknown Meal' }
         }))
-      })) || [];
+      }));
 
-      console.log('Processed History Orders:', processedHistoryOrders);
       setHistoryOrders(processedHistoryOrders);
 
       // Calculate recent revenue (last 7 days)
