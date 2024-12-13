@@ -8,6 +8,7 @@ import { supabase } from '@/lib/supabase';
 import type { Meal, MealType } from '@/types/meal';
 import MealCard from '@/components/ui/MealCard';
 import MealFilters from '@/components/ui/MealFilters';
+import FacebookReviews from '@/components/FacebookReviews';
 
 export default function HomePage() {
   const [meals, setMeals] = useState<Meal[]>([]);
@@ -254,6 +255,8 @@ export default function HomePage() {
             )}
           </div>
         </section>
+
+        <FacebookReviews />
       </main>
       <footer className="bg-gray-800 py-4">
         <div className="container mx-auto text-center text-white">
