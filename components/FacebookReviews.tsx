@@ -1,74 +1,62 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { Star } from 'lucide-react';
+import { Star, Facebook, Instagram, User } from 'lucide-react';
 
 interface Review {
   id: string;
+  platform: 'facebook' | 'instagram';
   reviewer: {
     name: string;
-    id: string;
   };
   rating: number;
   content: string;
   date: string;
 }
 
+const sampleReviews: Review[] = [
+  {
+    id: '1',
+    platform: 'facebook',
+    reviewer: {
+      name: 'Sarah Johnson'
+    },
+    rating: 5,
+    content: 'Absolutely love the meal service! The butter chicken was amazing and the portions are perfect. Great value for money! 👨‍🍳✨',
+    date: '2023-12-10'
+  },
+  {
+    id: '2',
+    platform: 'instagram',
+    reviewer: {
+      name: 'Mike Chen'
+    },
+    rating: 5,
+    content: 'These meals are a game changer! Fresh ingredients and the taste is incredible. My family looks forward to every delivery! 🥘❤️',
+    date: '2023-12-08'
+  },
+  {
+    id: '3',
+    platform: 'facebook',
+    reviewer: {
+      name: 'Emily Roberts'
+    },
+    rating: 5,
+    content: 'Finally found a meal service that delivers restaurant quality food. The lamb curry was to die for! Highly recommend! 🌟',
+    date: '2023-12-05'
+  },
+  {
+    id: '4',
+    platform: 'instagram',
+    reviewer: {
+      name: 'David Wong'
+    },
+    rating: 5,
+    content: 'Healthy, delicious, and convenient! Love how each meal is perfectly portioned. The chicken stir-fry is my favorite! 🥢🔥',
+    date: '2023-12-01'
+  }
+];
+
 export default function FacebookReviews() {
-  const [reviews, setReviews] = useState<Review[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    async function loadReviews() {
-      try {
-        const response = await fetch('/api/facebook-reviews');
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.error || 'Failed to load reviews');
-        }
-
-        setReviews(data.data);
-      } catch (err) {
-        setError('Failed to load reviews');
-        console.error('Error loading reviews:', err);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    loadReviews();
-  }, []);
-
-  if (loading) {
-    return (
-      <section className="bg-gray-50 py-16">
-        <div className="container mx-auto px-4">
-          <div className="text-center">
-            <p>Loading reviews...</p>
-          </div>
-        </div>
-      </section>
-    );
-  }
-
-  if (error) {
-    return (
-      <section className="bg-gray-50 py-16">
-        <div className="container mx-auto px-4">
-          <div className="text-center">
-            <p className="text-red-600">{error}</p>
-          </div>
-        </div>
-      </section>
-    );
-  }
-
-  if (!reviews || reviews.length === 0) {
-    return null;
-  }
-
   return (
     <section className="bg-gray-50 py-16">
       <div className="container mx-auto px-4">
@@ -81,20 +69,25 @@ export default function FacebookReviews() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {reviews.map((review) => (
+          {sampleReviews.map((review) => (
             <div
               key={review.id}
               className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300"
             >
               <div className="p-6">
                 <div className="flex items-center mb-4">
-                  <img
-                    src={`https://graph.facebook.com/${review.reviewer.id}/picture?type=square`}
-                    alt={review.reviewer.name}
-                    className="w-12 h-12 rounded-full mr-4"
-                  />
+                  <div className="w-12 h-12 flex items-center justify-center rounded-full bg-gray-100 mr-4">
+                    <User className="w-6 h-6 text-gray-500" />
+                  </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900">{review.reviewer.name}</h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-semibold text-gray-900">{review.reviewer.name}</h3>
+                      {review.platform === 'facebook' ? (
+                        <Facebook className="w-4 h-4 text-blue-600" />
+                      ) : (
+                        <Instagram className="w-4 h-4 text-pink-600" />
+                      )}
+                    </div>
                     <div className="flex items-center">
                       {Array.from({ length: review.rating }).map((_, i) => (
                         <Star
@@ -118,15 +111,28 @@ export default function FacebookReviews() {
           ))}
         </div>
 
-        <div className="text-center mt-10">
-          <a
-            href={`https://www.facebook.com/${process.env.NEXT_PUBLIC_FACEBOOK_PAGE_ID}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-emerald-600 hover:bg-emerald-700 transition-colors duration-300"
-          >
-            See More Reviews on Facebook
-          </a>
+        <div className="mt-8 text-center">
+          <p className="text-gray-600">
+            Follow us on social media for more reviews and updates!
+          </p>
+          <div className="flex justify-center gap-4 mt-4">
+            <a
+              href="https://facebook.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:text-blue-700 transition-colors"
+            >
+              <Facebook className="w-6 h-6" />
+            </a>
+            <a
+              href="https://instagram.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-pink-600 hover:text-pink-700 transition-colors"
+            >
+              <Instagram className="w-6 h-6" />
+            </a>
+          </div>
         </div>
       </div>
     </section>
