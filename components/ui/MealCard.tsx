@@ -132,15 +132,10 @@ export default function MealCard({ meal, onEdit, onDelete }: MealCardProps) {
         )}
       </div>
       <div className="p-4">
-        <div className="flex justify-between items-start gap-2 mb-2">
-          <div className="flex flex-col gap-2">
-            <h3 className="text-lg font-semibold">{meal.title}</h3>
-            <div className="flex flex-wrap gap-2">
-              {meal.is_chef_special && (
-                <span className="inline-flex items-center px-2 py-1 rounded-full text-sm bg-amber-100 text-amber-800">
-                  👨‍🍳 Chef Special
-                </span>
-              )}
+        <div className="flex justify-between items-start mb-2">
+          <div>
+            <div className="flex items-center gap-2">
+              <h3 className="text-lg font-semibold">{meal.title}</h3>
               {meal.meal_types.map((type) => (
                 <span
                   key={type}
@@ -151,39 +146,39 @@ export default function MealCard({ meal, onEdit, onDelete }: MealCardProps) {
                 </span>
               ))}
             </div>
+            <p className="text-sm text-gray-500">Available: {formatDate(meal.date_available)}</p>
+            {meal.size && <p className="text-sm text-gray-500">Size: {meal.size}</p>}
+            {meal.is_chef_special && (
+              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-amber-100 text-amber-800 mt-1">
+                👨‍🍳 Chef Special
+              </span>
+            )}
           </div>
           <div className="text-right">
             <p className="text-lg font-bold text-emerald-600">
               ${calculateDisplayPrice(meal).toFixed(2)}
               {meal.includes_gst && <span className="text-xs ml-1">(Inc. GST)</span>}
             </p>
-            <p className="text-sm text-gray-500">{formatDate(meal.date_available)}</p>
+            <p className="text-sm text-gray-500">Pick-up: {meal.time_available}</p>
           </div>
         </div>
 
         <p className="text-gray-600 mb-4 line-clamp-2">{meal.description}</p>
 
         {isAdminView ? (
-          <div className="space-y-3">
-            <div className="grid grid-cols-2 gap-2 text-sm text-gray-600">
-              <div>Available: {meal.available_quantity}</div>
-              <div>Pick-up: {meal.time_available}</div>
-              {meal.size && <div>Size: {meal.size}</div>}
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => onEdit(meal.id)}
-                className="flex-1 bg-emerald-100 text-emerald-700 px-3 py-1.5 rounded-md hover:bg-emerald-200 transition-colors text-sm font-medium"
-              >
-                Edit
-              </button>
-              <button
-                onClick={() => onDelete(meal.id)}
-                className="flex-1 bg-red-100 text-red-700 px-3 py-1.5 rounded-md hover:bg-red-200 transition-colors text-sm font-medium"
-              >
-                Delete
-              </button>
-            </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => onEdit(meal.id)}
+              className="flex-1 bg-emerald-100 text-emerald-700 px-3 py-1.5 rounded-md hover:bg-emerald-200 transition-colors text-sm font-medium"
+            >
+              Edit
+            </button>
+            <button
+              onClick={() => onDelete(meal.id)}
+              className="flex-1 bg-red-100 text-red-700 px-3 py-1.5 rounded-md hover:bg-red-200 transition-colors text-sm font-medium"
+            >
+              Delete
+            </button>
           </div>
         ) : (
           <div className="flex justify-between items-center">
