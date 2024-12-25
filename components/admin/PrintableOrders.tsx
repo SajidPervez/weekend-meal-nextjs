@@ -6,9 +6,11 @@ interface Order {
   id: number;
   created_at: string;
   customer_email: string;
-  customer_phone: string;
+  customer_phone: string | null;
   total_amount: number;
   status: string;
+  session_id?: string;
+  payment_status?: string;
   order_items: OrderItem[];
 }
 

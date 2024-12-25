@@ -25,8 +25,8 @@ interface ChartData {
   datasets: {
     label: string;
     data: number[];
-    backgroundColor: string[];
-    borderColor: string[];
+    backgroundColor: string;
+    borderColor: string;
     borderWidth: number;
   }[];
 }
@@ -63,8 +63,8 @@ export default function PopularMealsChart() {
     datasets: [{
       label: 'Orders',
       data: [],
-      backgroundColor: [],
-      borderColor: [],
+      backgroundColor: '',
+      borderColor: '',
       borderWidth: 1
     }]
   });
@@ -74,57 +74,86 @@ export default function PopularMealsChart() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch order items with meal details
-        const { data: orderItems, error: orderError } = await supabase
-          .from('order_items')
+        // First get all completed orders with their order items
+        const { data: ordersData, error: ordersError } = await supabase
+          .from('orders')
           .select(`
-            meal_id,
-            meal:meals (
+            id,
+            status,
+            order_items (
               id,
-              title
+              meal_id,
+              quantity
             )
-          `);
+          `)
+          .eq('status', 'completed');
 
-        if (orderError) throw orderError;
+        if (ordersError) {
+          console.error('Error fetching orders:', ordersError);
+          throw ordersError;
+        }
+
+        console.log('Raw orders data:', ordersData);
+
+        // Get unique meal IDs
+        const mealIds = new Set(
+          ordersData?.flatMap(order => 
+            order.order_items.map(item => item.meal_id)
+          ) || []
+        );
+
+        // Fetch meal details
+        const { data: mealsData, error: mealsError } = await supabase
+          .from('meals')
+          .select('id, title')
+          .in('id', Array.from(mealIds));
+
+        if (mealsError) {
+          console.error('Error fetching meals:', mealsError);
+          throw mealsError;
+        }
+
+        // Create a map of meal IDs to titles
+        const mealsMap = new Map(
+          mealsData?.map(meal => [meal.id, meal.title]) || []
+        );
+
+        console.log('Meals map:', mealsMap);
 
         // Count orders per meal
-        const mealCounts = orderItems.reduce((acc: { [key: number]: MealData }, item) => {
-          if (!item.meal) return acc;
-          
-          if (!acc[item.meal.id]) {
-            acc[item.meal.id] = {
-              id: item.meal.id,
-              title: item.meal.title,
-              count: 0
-            };
-          }
-          acc[item.meal.id].count++;
-          return acc;
-        }, {});
-
-        // Convert to array and sort by count
-        const sortedMeals = Object.values(mealCounts)
-          .sort((a, b) => b.count - a.count)
-          .slice(0, 5); // Top 5 meals
-
-        // Generate random colors for each meal
-        const colors = sortedMeals.map(() => {
-          const r = Math.floor(Math.random() * 255);
-          const g = Math.floor(Math.random() * 255);
-          const b = Math.floor(Math.random() * 255);
-          return `rgba(${r}, ${g}, ${b}, 0.5)`;
+        const mealCounts: { [key: string]: number } = {};
+        ordersData.forEach(order => {
+          order.order_items.forEach(item => {
+            const mealTitle = mealsMap.get(item.meal_id) || 'Unknown Meal';
+            mealCounts[mealTitle] = (mealCounts[mealTitle] || 0) + item.quantity;
+          });
         });
 
-        setChartData({
-          labels: sortedMeals.map(meal => meal.title),
-          datasets: [{
-            label: 'Orders',
-            data: sortedMeals.map(meal => meal.count),
-            backgroundColor: colors,
-            borderColor: colors.map(color => color.replace('0.5', '1')),
-            borderWidth: 1
-          }]
-        });
+        console.log('Meal counts:', mealCounts);
+
+        const sortedMeals = Object.entries(mealCounts)
+          .sort(([, a], [, b]) => b - a)
+          .slice(0, 4);
+
+        console.log('Sorted meals:', sortedMeals);
+
+        const emeraldColor = 'rgb(52, 211, 153)';
+
+        const chartData = {
+          labels: sortedMeals.map(([title]) => title),
+          datasets: [
+            {
+              label: 'Orders',
+              data: sortedMeals.map(([, count]) => count),
+              backgroundColor: emeraldColor,
+              borderColor: emeraldColor,
+              borderWidth: 1
+            },
+          ],
+        };
+
+        console.log('Chart data:', chartData);
+        setChartData(chartData);
       } catch (error) {
         console.error('Error fetching chart data:', error);
       } finally {

@@ -12,10 +12,16 @@ interface Meal {
 
 interface OrderItem {
   id: number;
+  order_id: number;
   meal_id: number;
-  meal?: Meal;
+  quantity: number;
+  price: number;
   pickup_date: string;
   pickup_time: string;
+  meal?: {
+    id: number;
+    title: string;
+  };
 }
 
 interface Order {
@@ -25,9 +31,9 @@ interface Order {
   customer_phone: string | null;
   total_amount: number;
   status: string;
-  order_items: OrderItem[];
   session_id?: string;
   payment_status?: string;
+  order_items: OrderItem[];
 }
 
 interface OrderResponse {
@@ -39,21 +45,7 @@ interface OrderResponse {
   status: string;
   session_id?: string;
   payment_status?: string;
-  order_items: OrderItemResponse[];
-}
-
-interface OrderItemResponse {
-  id: number;
-  order_id: number;
-  meal_id: number;
-  quantity: number;
-  price: number;
-  pickup_date: string;
-  pickup_time: string;
-  meal?: {
-    id: number;
-    title: string;
-  };
+  order_items: OrderItem[];
 }
 
 interface OrdersTableProps {
@@ -171,7 +163,7 @@ export default function OrdersTable({
       // Process orders with meal details
       const processedOrders = (ordersData || []).map((order: OrderResponse) => ({
         ...order,
-        order_items: order.order_items.map((item: OrderItemResponse) => ({
+        order_items: order.order_items.map((item: OrderItem) => ({
           ...item,
           meal: mealsMap.get(item.meal_id) || { id: item.meal_id, title: 'Unknown Meal' }
         }))
