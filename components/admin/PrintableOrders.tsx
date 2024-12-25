@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 
 interface Order {
   id: number;
@@ -39,8 +39,6 @@ interface PrintableOrdersProps {
 }
 
 export default function PrintableOrders({ orders, onClose }: PrintableOrdersProps) {
-  const [isPrinting, setIsPrinting] = useState(false);
-
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-AU', {
       year: 'numeric',
