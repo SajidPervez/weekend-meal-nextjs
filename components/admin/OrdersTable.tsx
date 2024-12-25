@@ -1,32 +1,33 @@
 'use client';
 
-import { useState, useEffect, ReactNode } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import PrintableOrders from './PrintableOrders';
 import { Printer } from 'lucide-react';
+import PrintableOrders from './PrintableOrders';
 
 interface Meal {
-  id: string;
+  id: number;
   title: string;
 }
 
 interface OrderItem {
+  id: number;
+  meal_id: number;
+  meal?: Meal;
   pickup_date: string;
   pickup_time: string;
-  meal_id: string;
-  meal?: Meal;
 }
 
 interface Order {
   id: number;
   created_at: string;
-  status: string;
-  total_amount: number;
   customer_email: string;
-  customer_phone: string;
-  session_id?: string;
-  payment_status: string;
+  customer_phone: string | null;
+  total_amount: number;
+  status: string;
   order_items: OrderItem[];
+  session_id?: string;
+  payment_status?: string;
 }
 
 interface OrderItemResponse {
@@ -54,308 +55,17 @@ interface OrderResponse {
 
 const PAGE_SIZE = 10;
 
-interface OrdersTableSectionProps {
-  title: ReactNode;
-  orders: Order[];
-  totalOrders: number;
-  currentPage: number;
-  setCurrentPage: (page: number) => void;
-  searchTerm: string;
-  setSearchTerm: (term: string) => void;
-  setAppliedSearchTerm: (term: string) => void;
-  isProcessing: number | null;
-  updateOrderStatus: (orderId: number, newStatus: string) => void;
-  handleRefund: (orderId: number) => void;
-  showRefundButton: boolean;
+interface OrdersTableProps {
+  showHistorical?: boolean;
+  showRefundButton?: boolean;
 }
 
-const OrdersTableSection = ({
-  title,
-  orders,
-  totalOrders,
-  currentPage,
-  setCurrentPage,
-  searchTerm,
-  setSearchTerm,
-  setAppliedSearchTerm,
-  isProcessing,
-  updateOrderStatus,
-  handleRefund,
-  showRefundButton,
-}: OrdersTableSectionProps) => {
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      weekday: 'short',
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric'
-    });
-  };
-
-  const formatPickupTime = (time: string) => {
-    return time === '12:00:00' ? 'Lunch' : time === '18:00:00' ? 'Dinner' : time;
-  };
-
-  const canRefund = (order: Order) => {
-    return (
-      order.session_id && // Must have a session ID
-      order.payment_status === 'paid' && // Must be paid
-      order.status !== 'cancelled' && // Not already cancelled
-      order.status !== 'completed' // Not completed
-    );
-  };
-
-  const handleSearch = () => {
-    setCurrentPage(1); // Reset to first page
-    setAppliedSearchTerm(searchTerm);
-  };
-
-  const clearSearch = () => {
-    setSearchTerm('');
-    setAppliedSearchTerm('');
-    setCurrentPage(1);
-  };
-
-  const renderSearchInput = () => (
-    <div className="mb-4">
-      <div className="flex gap-2">
-        <div className="relative flex-1">
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                handleSearch();
-              }
-            }}
-            placeholder="Search by email or phone..."
-            className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-emerald-500 focus:border-emerald-500"
-          />
-          <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-            <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-          </div>
-        </div>
-        <button
-          onClick={handleSearch}
-          className="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
-        >
-          Search
-        </button>
-        {searchTerm && (
-          <button
-            onClick={clearSearch}
-            className="px-4 py-2 bg-gray-100 text-gray-600 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
-          >
-            Clear
-          </button>
-        )}
-      </div>
-    </div>
-  );
-
-  const renderOrdersTable = () => (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden mb-8">
-      <div className="p-6 border-b border-gray-200">
-        <h2 className="text-xl font-semibold text-emerald-700">{title}</h2>
-      </div>
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Meal</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pickup</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {orders.map((order) => (
-              <tr key={order.id} className="hover:bg-emerald-50">
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatDate(order.created_at)}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {order.order_items.map((item, index) => (
-                    <div key={index} className="text-sm">
-                      {item.meal?.title || `Meal #${item.meal_id}`}
-                      <br />
-                      <span className="text-gray-500">
-                        {formatDate(item.pickup_date)} - {formatPickupTime(item.pickup_time)}
-                      </span>
-                    </div>
-                  ))}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900">{order.customer_email}</div>
-                  <div className="text-sm text-gray-500">{order.customer_phone}</div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  {order.order_items.map((item, index) => (
-                    <div key={index} className="text-sm text-gray-900">
-                      {formatDate(item.pickup_date)}
-                      <span className="text-gray-500 ml-2">{formatPickupTime(item.pickup_time)}</span>
-                    </div>
-                  ))}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${order.total_amount.toFixed(2)}</td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                    ${order.status === 'completed' ? 'bg-green-100 text-green-800' : 
-                      order.status === 'processing' ? 'bg-yellow-100 text-yellow-800' : 
-                      order.status === 'cancelled' ? 'bg-red-100 text-red-800' : 
-                      'bg-gray-100 text-gray-800'}`}>
-                    {order.status}
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  <select
-                    value={order.status}
-                    onChange={(e) => updateOrderStatus(order.id, e.target.value)}
-                    disabled={isProcessing === order.id}
-                    className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm"
-                  >
-                    <option value="pending">Pending</option>
-                    <option value="processing">Processing</option>
-                    <option value="completed">Completed</option>
-                    <option value="cancelled">Cancelled</option>
-                  </select>
-                  {showRefundButton && canRefund(order) && (
-                    <button
-                      onClick={() => handleRefund(order.id)}
-                      disabled={isProcessing === order.id}
-                      className="mt-2 w-full inline-flex justify-center items-center px-3 py-2 border border-red-300 text-sm leading-4 font-medium rounded-md text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {isProcessing === order.id ? (
-                        <>
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-500 mr-2"></div>
-                          Processing...
-                        </>
-                      ) : (
-                        'Cancel & Refund'
-                      )}
-                    </button>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-
-  const renderPagination = () => {
-    const totalPages = Math.ceil(totalOrders / PAGE_SIZE);
-    
-    return (
-      <div className="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6 rounded-lg shadow-md mt-4">
-        <div className="flex flex-1 justify-between sm:hidden">
-          <button
-            onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-            disabled={currentPage === 1}
-            className="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-          >
-            Previous
-          </button>
-          <button
-            onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-            disabled={currentPage === totalPages}
-            className="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-          >
-            Next
-          </button>
-        </div>
-        <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
-          <div>
-            <p className="text-sm text-gray-700">
-              Showing <span className="font-medium">{currentPage}</span> of{' '}
-              <span className="font-medium">{totalPages}</span>
-            </p>
-          </div>
-          <div>
-            <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
-              <button
-                onClick={() => setCurrentPage(1)}
-                disabled={currentPage === 1}
-                className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0"
-              >
-                <span className="sr-only">First</span>
-                ««
-              </button>
-              <button
-                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                disabled={currentPage === 1}
-                className="relative inline-flex items-center px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0"
-              >
-                <span className="sr-only">Previous</span>
-                «
-              </button>
-              <button
-                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                disabled={currentPage === totalPages}
-                className="relative inline-flex items-center px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0"
-              >
-                <span className="sr-only">Next</span>
-                »
-              </button>
-              <button
-                onClick={() => setCurrentPage(totalPages)}
-                disabled={currentPage === totalPages}
-                className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0"
-              >
-                <span className="sr-only">Last</span>
-                »»
-              </button>
-            </nav>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  return (
-    <div>
-      {renderSearchInput()}
-      {renderOrdersTable()}
-      {renderPagination()}
-    </div>
-  );
-};
-
-export default function OrdersTable() {
-  const [newOrders, setNewOrders] = useState<Order[]>([]);
-  const [historyOrders, setHistoryOrders] = useState<Order[]>([]);
-  const [recentRevenue, setRecentRevenue] = useState(0);
-  const [monthlyRevenue, setMonthlyRevenue] = useState(0);
+export default function OrdersTable({ showHistorical = false, showRefundButton = false }: OrdersTableProps) {
+  const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [newOrdersPage, setNewOrdersPage] = useState(1);
-  const [historyOrdersPage, setHistoryOrdersPage] = useState(1);
-  const [totalNewOrders, setTotalNewOrders] = useState(0);
-  const [totalHistoryOrders, setTotalHistoryOrders] = useState(0);
+  const [searchTerm, setSearchTerm] = useState('');
   const [isProcessing, setIsProcessing] = useState<number | null>(null);
-  const [newOrdersSearch, setNewOrdersSearch] = useState('');
-  const [historyOrdersSearch, setHistoryOrdersSearch] = useState('');
-  const [appliedNewOrdersSearch, setAppliedNewOrdersSearch] = useState('');
-  const [appliedHistoryOrdersSearch, setAppliedHistoryOrdersSearch] = useState('');
   const [isPrinting, setIsPrinting] = useState(false);
-
-  const handlePrint = () => {
-    if (newOrders && newOrders.length > 0) {
-      console.log('Printing orders:', newOrders);
-      setIsPrinting(true);
-    } else {
-      console.error('No orders available to print');
-    }
-  };
-
-  const handlePrintComplete = () => {
-    setIsPrinting(false);
-  };
 
   const updateOrderStatus = async (orderId: number, newStatus: string) => {
     try {
@@ -406,10 +116,6 @@ export default function OrdersTable() {
     }
   };
 
-  useEffect(() => {
-    fetchOrders();
-  }, [newOrdersPage, historyOrdersPage, appliedNewOrdersSearch, appliedHistoryOrdersSearch]);
-
   const fetchOrders = async () => {
     try {
       setIsLoading(true);
@@ -426,36 +132,12 @@ export default function OrdersTable() {
 
       const mealsMap = new Map(mealsData?.map(meal => [meal.id, meal]) || []);
 
-      // Base query for new orders count
-      let newOrdersQuery = supabase
-        .from('orders')
-        .select('*', { count: 'exact', head: true })
-        .in('status', ['pending', 'processing']);
+      // Determine which status to fetch based on showHistorical
+      const statusList = showHistorical ? ['completed', 'cancelled'] : ['pending', 'processing'];
+      console.log('Fetching orders with status:', statusList);
 
-      if (appliedNewOrdersSearch) {
-        newOrdersQuery = newOrdersQuery.or(`customer_email.ilike.%${appliedNewOrdersSearch}%,customer_phone.ilike.%${appliedNewOrdersSearch}%`);
-      }
-
-      // Get count for new orders
-      const { count: newCount } = await newOrdersQuery;
-      setTotalNewOrders(newCount || 0);
-
-      // Base query for history orders count
-      let historyOrdersQuery = supabase
-        .from('orders')
-        .select('*', { count: 'exact', head: true })
-        .in('status', ['completed', 'cancelled']);
-
-      if (appliedHistoryOrdersSearch) {
-        historyOrdersQuery = historyOrdersQuery.or(`customer_email.ilike.%${appliedHistoryOrdersSearch}%,customer_phone.ilike.%${appliedHistoryOrdersSearch}%`);
-      }
-
-      // Get count for history orders
-      const { count: historyCount } = await historyOrdersQuery;
-      setTotalHistoryOrders(historyCount || 0);
-
-      // Fetch paginated new orders with search and include all order item details
-      let newOrdersDataQuery = supabase
+      // Fetch orders with all details
+      const { data: ordersData, error: ordersError } = await supabase
         .from('orders')
         .select(`
           *,
@@ -470,23 +152,18 @@ export default function OrdersTable() {
             created_at
           )
         `)
-        .in('status', ['pending', 'processing'])
+        .in('status', statusList)
         .order('created_at', { ascending: false });
 
-      if (appliedNewOrdersSearch) {
-        newOrdersDataQuery = newOrdersDataQuery.or(`customer_email.ilike.%${appliedNewOrdersSearch}%,customer_phone.ilike.%${appliedNewOrdersSearch}%`);
+      if (ordersError) {
+        console.error('Error fetching orders:', ordersError);
+        throw ordersError;
       }
 
-      const { data: newOrdersData, error: newOrdersError } = await newOrdersDataQuery
-        .range((newOrdersPage - 1) * PAGE_SIZE, newOrdersPage * PAGE_SIZE - 1);
+      console.log('Raw orders data:', ordersData);
 
-      if (newOrdersError) {
-        console.error('Error fetching new orders:', newOrdersError);
-        throw newOrdersError;
-      }
-
-      // Add meal details to orders
-      const processedNewOrders = (newOrdersData || []).map((order: OrderResponse) => ({
+      // Process orders with meal details
+      const processedOrders = (ordersData || []).map((order: OrderResponse) => ({
         ...order,
         order_items: order.order_items.map((item: OrderItemResponse) => ({
           ...item,
@@ -494,69 +171,9 @@ export default function OrdersTable() {
         }))
       }));
 
-      setNewOrders(processedNewOrders);
+      console.log('Processed orders:', processedOrders);
+      setOrders(processedOrders);
 
-      // Fetch paginated history orders with search
-      let historyOrdersDataQuery = supabase
-        .from('orders')
-        .select(`
-          *,
-          order_items:order_items (
-            id,
-            pickup_date,
-            pickup_time,
-            meal_id
-          )
-        `)
-        .in('status', ['completed', 'cancelled'])
-        .order('created_at', { ascending: false });
-
-      if (appliedHistoryOrdersSearch) {
-        historyOrdersDataQuery = historyOrdersDataQuery.or(`customer_email.ilike.%${appliedHistoryOrdersSearch}%,customer_phone.ilike.%${appliedHistoryOrdersSearch}%`);
-      }
-
-      const { data: historyOrdersData, error: historyOrdersError } = await historyOrdersDataQuery
-        .range((historyOrdersPage - 1) * PAGE_SIZE, historyOrdersPage * PAGE_SIZE - 1);
-
-      if (historyOrdersError) {
-        console.error('Error fetching history orders:', historyOrdersError);
-        throw historyOrdersError;
-      }
-
-      // Add meal details to history orders
-      const processedHistoryOrders = (historyOrdersData || []).map((order: OrderResponse) => ({
-        ...order,
-        order_items: order.order_items.map((item: OrderItemResponse) => ({
-          ...item,
-          meal: mealsMap.get(item.meal_id) || { id: item.meal_id, title: 'Unknown Meal' }
-        }))
-      }));
-
-      setHistoryOrders(processedHistoryOrders);
-
-      // Calculate recent revenue (last 7 days)
-      const { data: recentOrdersData } = await supabase
-        .from('orders')
-        .select('total_amount')
-        .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString());
-
-      const recentTotal = recentOrdersData?.reduce(
-        (sum, order) => sum + (order.total_amount || 0),
-        0
-      );
-      setRecentRevenue(recentTotal || 0);
-
-      // Calculate monthly revenue (last 30 days)
-      const { data: monthlyOrdersData } = await supabase
-        .from('orders')
-        .select('total_amount')
-        .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
-
-      const monthlyTotal = monthlyOrdersData?.reduce(
-        (sum, order) => sum + (order.total_amount || 0),
-        0
-      );
-      setMonthlyRevenue(monthlyTotal || 0);
     } catch (error) {
       console.error('Error fetching orders:', error);
     } finally {
@@ -564,78 +181,170 @@ export default function OrdersTable() {
     }
   };
 
+  useEffect(() => {
+    fetchOrders();
+  }, [searchTerm, showHistorical]);
+
+  // Filter orders based on status and search term
+  const filteredOrders = orders.filter((order) => {
+    const matchesSearch = !searchTerm || 
+      order.customer_email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.order_items.some(item => item.meal?.title?.toLowerCase().includes(searchTerm.toLowerCase()));
+
+    const isHistoricalOrder = order.status === 'completed' || order.status === 'cancelled';
+    const isActiveOrder = order.status === 'pending' || order.status === 'processing';
+
+    return showHistorical ? (isHistoricalOrder && matchesSearch) : (isActiveOrder && matchesSearch);
+  });
+
+  // Sort orders by date, newest first
+  filteredOrders.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+  // Filter active orders for printing (pending or processing)
+  const activeOrders = orders.filter(order => 
+    order.status === 'pending' || order.status === 'processing'
+  );
+
+  const handlePrint = () => {
+    setIsPrinting(true);
+  };
+
   if (isLoading) {
-    return <div className="flex items-center justify-center p-4">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500"></div>
-    </div>;
+    return <div>Loading...</div>;
+  }
+
+  if (!isLoading && filteredOrders.length === 0) {
+    return (
+      <div className="text-center py-8 text-gray-500">
+        {showHistorical ? 'No completed or cancelled orders found' : 'No active orders found'}
+      </div>
+    );
   }
 
   return (
-    <div className="space-y-8">
-      {isPrinting && (
-        <PrintableOrders
-          orders={newOrders}
-          onPrintComplete={handlePrintComplete}
-        />
-      )}
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Revenue Cards */}
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Recent Revenue</h3>
-          <p className="text-3xl font-bold text-emerald-600">${recentRevenue.toFixed(2)}</p>
-          <p className="text-sm text-gray-500">Last 7 days</p>
-        </div>
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Monthly Revenue</h3>
-          <p className="text-3xl font-bold text-emerald-600">${monthlyRevenue.toFixed(2)}</p>
-          <p className="text-sm text-gray-500">Current month</p>
-        </div>
-      </div>
-
-      {/* New Orders Section */}
-      <OrdersTableSection
-        title={
-          <div className="flex justify-between items-center">
-            <span>New Orders</span>
+    <div>
+      {/* Search and Print Section - Only show for active orders */}
+      {!showHistorical && (
+        <div className="flex items-center justify-between gap-4 mb-6">
+          <div className="relative flex-1">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <input
+              type="text"
+              placeholder="Search orders..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm"
+            />
+          </div>
+          {activeOrders.length > 0 && (
             <button
               onClick={handlePrint}
-              className="flex items-center gap-2 px-4 py-2 text-sm bg-emerald-600 text-white rounded-md hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 whitespace-nowrap"
             >
-              <Printer className="w-4 h-4" />
-              Print Orders
+              <Printer className="h-4 w-4 mr-2" />
+              Print Orders ({activeOrders.length})
             </button>
-          </div>
-        }
-        orders={newOrders}
-        totalOrders={totalNewOrders}
-        currentPage={newOrdersPage}
-        setCurrentPage={setNewOrdersPage}
-        searchTerm={newOrdersSearch}
-        setSearchTerm={setNewOrdersSearch}
-        setAppliedSearchTerm={setAppliedNewOrdersSearch}
-        isProcessing={isProcessing}
-        updateOrderStatus={updateOrderStatus}
-        handleRefund={handleRefund}
-        showRefundButton={true}
-      />
-      {/* Order History */}
-      <div>
-        <OrdersTableSection
-          title={<span>Order History</span>}
-          orders={historyOrders}
-          totalOrders={totalHistoryOrders}
-          currentPage={historyOrdersPage}
-          setCurrentPage={setHistoryOrdersPage}
-          searchTerm={historyOrdersSearch}
-          setSearchTerm={setHistoryOrdersSearch}
-          setAppliedSearchTerm={setAppliedHistoryOrdersSearch}
-          isProcessing={isProcessing}
-          updateOrderStatus={updateOrderStatus}
-          handleRefund={handleRefund}
-          showRefundButton={false}
-        />
+          )}
+        </div>
+      )}
+
+      {/* Orders Table */}
+      <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
+        <table className="min-w-full divide-y divide-gray-300">
+          <thead className="bg-gray-50">
+            <tr>
+              <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Date</th>
+              <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Meal</th>
+              <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Customer</th>
+              <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Pickup</th>
+              <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Amount</th>
+              <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Status</th>
+              <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200 bg-white">
+            {filteredOrders.map((order) => (
+              <tr key={order.id}>
+                <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm text-gray-500 sm:pl-6">
+                  {new Date(order.created_at).toLocaleDateString()}
+                </td>
+                <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                  {order.order_items.map((item, index) => (
+                    <div key={index}>
+                      {item.meal?.title || `Meal #${item.meal_id}`}
+                    </div>
+                  ))}
+                </td>
+                <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                  <div>{order.customer_email}</div>
+                  <div className="text-gray-400">{order.customer_phone}</div>
+                </td>
+                <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                  {order.order_items.map((item, index) => (
+                    <div key={index}>
+                      {new Date(item.pickup_date).toLocaleDateString()} - {item.pickup_time === '12:00:00' ? 'Lunch' : 'Dinner'}
+                    </div>
+                  ))}
+                </td>
+                <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                  ${order.total_amount.toFixed(2)}
+                </td>
+                <td className="whitespace-nowrap px-3 py-4 text-sm">
+                  <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                    order.status === 'completed' ? 'bg-green-100 text-green-800' :
+                    order.status === 'cancelled' ? 'bg-red-100 text-red-800' :
+                    order.status === 'processing' ? 'bg-yellow-100 text-yellow-800' :
+                    'bg-gray-100 text-gray-800'
+                  }`}>
+                    {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                  </span>
+                </td>
+                <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                  <select
+                    value={order.status}
+                    onChange={(e) => updateOrderStatus(order.id, e.target.value)}
+                    disabled={isProcessing === order.id}
+                    className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm"
+                  >
+                    <option value="pending">Pending</option>
+                    <option value="processing">Processing</option>
+                    <option value="completed">Completed</option>
+                    <option value="cancelled">Cancelled</option>
+                  </select>
+                  {showRefundButton && order.session_id && order.payment_status === 'paid' && order.status !== 'cancelled' && order.status !== 'completed' && (
+                    <button
+                      onClick={() => handleRefund(order.id)}
+                      disabled={isProcessing === order.id}
+                      className="mt-2 w-full inline-flex justify-center items-center px-3 py-2 border border-red-300 text-sm leading-4 font-medium rounded-md text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isProcessing === order.id ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-500 mr-2"></div>
+                          Processing...
+                        </>
+                      ) : (
+                        'Cancel & Refund'
+                      )}
+                    </button>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
+
+      {/* Print Component */}
+      {isPrinting && (
+        <PrintableOrders
+          orders={activeOrders}
+          onClose={() => setIsPrinting(false)}
+        />
+      )}
     </div>
   );
 }
