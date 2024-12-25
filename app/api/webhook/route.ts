@@ -1,123 +1,33 @@
-import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
+import { headers } from 'next/headers';
 import Stripe from 'stripe';
-import { webhookClient } from '@/lib/supabase-webhook';
+import { createClient } from '@supabase/supabase-js';
 import { sendReceiptEmail } from '@/lib/email';
 
 if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error('STRIPE_SECRET_KEY is not defined');
+  throw new Error('STRIPE_SECRET_KEY is not defined in environment variables');
 }
 
 if (!process.env.STRIPE_WEBHOOK_SECRET) {
-  throw new Error('STRIPE_WEBHOOK_SECRET is not defined');
+  throw new Error('STRIPE_WEBHOOK_SECRET is not defined in environment variables');
 }
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: '2024-11-20.acacia',
+  apiVersion: '2023-10-16',
   typescript: true,
 });
 
-interface MealDetail {
-  id: string;
-  quantity: number;
-  time: string;
-  date: string;
-}
-
-async function updateMealQuantities(session: Stripe.Checkout.Session) {
-  console.log('🚀 Starting to update meal quantities...');
-  console.log('📦 Session metadata:', session.metadata);
-  
-  if (!session.metadata?.m) {
-    console.error('❌ No meal details found in session metadata');
-    return;
-  }
-
-  try {
-    // Parse the concise meal details format: "id:quantity:time:date|id:quantity:time:date"
-    const mealDetails: MealDetail[] = session.metadata.m.split('|').map(detail => {
-      const [id, quantity, time, date] = detail.split(':');
-      return {
-        id,
-        quantity: parseInt(quantity),
-        time,
-        date
-      };
-    });
-
-    console.log('📋 Parsed meal details:', JSON.stringify(mealDetails, null, 2));
-
-    for (const meal of mealDetails) {
-      if (!meal.id || !meal.quantity) {
-        console.error('❌ Invalid meal data:', meal);
-        continue;
-      }
-
-      console.log(`\n🔄 Processing meal: ID=${meal.id}, OrderQuantity=${meal.quantity}`);
-
-      // Get current meal data to ensure we have the latest quantity
-      console.log('🔍 Fetching current meal data...');
-      const { data: currentMeal, error: fetchError } = await webhookClient
-        .from('meals')
-        .select('id, title, available_quantity')
-        .eq('id', meal.id)
-        .single();
-
-      if (fetchError) {
-        console.error(`❌ Error fetching meal ${meal.id}:`, fetchError);
-        console.error('Full fetch error:', JSON.stringify(fetchError, null, 2));
-        throw fetchError; // Throw to trigger retry
-      }
-
-      if (!currentMeal) {
-        console.error(`❌ Meal not found with ID: ${meal.id}`);
-        throw new Error(`Meal not found: ${meal.id}`);
-      }
-
-      console.log('📊 Current meal data:', JSON.stringify(currentMeal, null, 2));
-
-      // Calculate new quantity
-      const newQuantity = Math.max(0, currentMeal.available_quantity - meal.quantity);
-      console.log(`🧮 Calculating new quantity: ${currentMeal.available_quantity} - ${meal.quantity} = ${newQuantity}`);
-
-      // Update the meal quantity
-      console.log(`🔄 Attempting to update meal ${meal.id} with new quantity: ${newQuantity}`);
-      
-      const { data: updateData, error: updateError } = await webhookClient
-        .from('meals')
-        .update({ 
-          available_quantity: newQuantity,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', meal.id)
-        .select()
-        .single();
-
-      if (updateError) {
-        console.error(`❌ Error updating meal ${meal.id}:`, updateError);
-        console.error('Full update error:', JSON.stringify(updateError, null, 2));
-        throw updateError; // Throw error to trigger webhook retry
-      }
-
-      if (!updateData) {
-        console.error(`❌ No data returned after update for meal ${meal.id}`);
-        throw new Error(`Update failed for meal: ${meal.id}`);
-      }
-
-      console.log(`✅ Successfully updated meal ${meal.id}:`, JSON.stringify(updateData, null, 2));
-    }
-  } catch (error) {
-    console.error('❌ Error processing meal details:', error);
-    throw error;
-  }
-}
+const webhookClient = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
 async function handleCheckoutComplete(session: Stripe.Checkout.Session) {
   try {
     console.log('Processing checkout session:', session.id);
     
     // First check if order already exists
-    const { data: existingOrder, error: checkError } = await webhookClient
+    const { data: existingOrder } = await webhookClient
       .from('orders')
       .select('id')
       .eq('session_id', session.id)
@@ -210,7 +120,6 @@ export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
 export const preferredRegion = 'auto';
 
-// This is needed for Stripe webhook to work - it needs the raw body
 export async function POST(request: Request) {
   try {
     const body = await request.text();
@@ -223,7 +132,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Use constructEventAsync instead of constructEvent
     const event = await stripe.webhooks.constructEventAsync(
       body,
       sig,
