@@ -1,7 +1,37 @@
 'use client';
 
-import { useEffect } from 'react';
-import { Order } from '@/types/order';
+import { useEffect, useState } from 'react';
+
+interface Order {
+  id: number;
+  created_at: string;
+  customer_email: string;
+  customer_phone: string;
+  total_amount: number;
+  status: string;
+  order_items: OrderItem[];
+}
+
+interface OrderItem {
+  id: number;
+  order_id: number;
+  meal_id: number;
+  quantity: number;
+  price: number;
+  pickup_date: string;
+  pickup_time: string;
+  meal?: {
+    id: number;
+    title: string;
+  };
+}
+
+interface GroupedOrders {
+  [key: string]: {
+    mealTitle: string;
+    orders: Order[];
+  };
+}
 
 interface PrintableOrdersProps {
   orders: Order[];
@@ -9,6 +39,8 @@ interface PrintableOrdersProps {
 }
 
 export default function PrintableOrders({ orders, onClose }: PrintableOrdersProps) {
+  const [isPrinting, setIsPrinting] = useState(false);
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-AU', {
       year: 'numeric',
@@ -39,33 +71,22 @@ export default function PrintableOrders({ orders, onClose }: PrintableOrdersProp
     };
   }, [onClose]);
 
-  // Group orders by meal without duplicating orders
-  const ordersByMeal = orders.reduce((acc, order) => {
-    // Get unique meals from order items
-    const uniqueMeals = Array.from(new Set(order.order_items.map(item => item.meal?.title || `Meal #${item.meal_id}`)));
-    
-    // For each unique meal, add the order under that meal's group
-    uniqueMeals.forEach(mealTitle => {
-      if (!acc[mealTitle]) {
-        acc[mealTitle] = [];
+  // Group orders by meal
+  const groupedOrders = orders.reduce((groups: GroupedOrders, order) => {
+    order.order_items.forEach((item) => {
+      if (!item.meal?.title) return;
+
+      const key = `${item.meal.title}_${item.pickup_date}_${item.pickup_time}`;
+      if (!groups[key]) {
+        groups[key] = {
+          mealTitle: item.meal.title,
+          orders: []
+        };
       }
-      
-      // Find the pickup details for this meal
-      const item = order.order_items.find(item => 
-        (item.meal?.title || `Meal #${item.meal_id}`) === mealTitle
-      );
-      
-      acc[mealTitle].push({
-        ...order,
-        pickup: {
-          date: item?.pickup_date || '',
-          time: item?.pickup_time || ''
-        }
-      });
+      groups[key].orders.push(order);
     });
-    
-    return acc;
-  }, {} as Record<string, any[]>);
+    return groups;
+  }, {});
 
   return (
     <div className="print-wrapper">
@@ -137,9 +158,9 @@ export default function PrintableOrders({ orders, onClose }: PrintableOrdersProp
           <p className="text-gray-500">Total Orders: {orders.length}</p>
         </div>
 
-        {Object.entries(ordersByMeal).map(([mealTitle, mealOrders]) => (
-          <div key={mealTitle} className="meal-group mb-8">
-            <h2 className="text-xl font-bold mb-4">{mealTitle}</h2>
+        {Object.entries(groupedOrders).map(([key, group]) => (
+          <div key={key} className="meal-group mb-8">
+            <h2 className="text-xl font-bold mb-4">{group.mealTitle}</h2>
             <table>
               <thead>
                 <tr>
@@ -151,15 +172,15 @@ export default function PrintableOrders({ orders, onClose }: PrintableOrdersProp
                 </tr>
               </thead>
               <tbody>
-                {mealOrders.map((order) => (
+                {group.orders.map((order) => (
                   <tr key={order.id} className="order-item">
                     <td>{order.id.slice(-8)}</td>
                     <td>
                       {order.customer_email}
                       {order.customer_phone && <div className="text-sm text-gray-500">{order.customer_phone}</div>}
                     </td>
-                    <td>{formatDate(order.pickup.date)}</td>
-                    <td>{formatTime(order.pickup.time)}</td>
+                    <td>{formatDate(order.order_items[0].pickup_date)}</td>
+                    <td>{formatTime(order.order_items[0].pickup_time)}</td>
                     <td>${order.total_amount.toFixed(2)}</td>
                   </tr>
                 ))}

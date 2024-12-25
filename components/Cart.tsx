@@ -1,7 +1,6 @@
 'use client';
 
 import { useCart } from '@/contexts/CartContext';
-import { useRouter } from 'next/navigation';
 import { ShoppingCart, X } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
 import { useState } from 'react';
@@ -11,7 +10,6 @@ const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
 
 export default function Cart() {
   const { items, removeFromCart, updateQuantity, getTotalPrice } = useCart();
-  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 

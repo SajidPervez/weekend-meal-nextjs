@@ -30,40 +30,46 @@ interface Order {
   payment_status?: string;
 }
 
+interface OrderResponse {
+  id: number;
+  created_at: string;
+  customer_email: string;
+  customer_phone: string;
+  total_amount: number;
+  status: string;
+  session_id?: string;
+  payment_status?: string;
+  order_items: OrderItemResponse[];
+}
+
 interface OrderItemResponse {
   id: number;
   order_id: number;
-  meal_id: string;
+  meal_id: number;
   quantity: number;
   price: number;
   pickup_date: string;
   pickup_time: string;
-  created_at: string;
+  meal?: {
+    id: number;
+    title: string;
+  };
 }
-
-interface OrderResponse {
-  id: number;
-  created_at: string;
-  status: string;
-  total_amount: number;
-  customer_email: string;
-  customer_phone: string;
-  session_id?: string;
-  payment_status: string;
-  order_items: OrderItemResponse[];
-}
-
-const PAGE_SIZE = 10;
 
 interface OrdersTableProps {
-  showHistorical?: boolean;
+  showHistorical: boolean;
+  searchTerm?: string;
   showRefundButton?: boolean;
 }
 
-export default function OrdersTable({ showHistorical = false, showRefundButton = false }: OrdersTableProps) {
+export default function OrdersTable({ 
+  showHistorical, 
+  searchTerm: externalSearchTerm = '', 
+  showRefundButton = false 
+}: OrdersTableProps) {
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState(externalSearchTerm);
   const [isProcessing, setIsProcessing] = useState<number | null>(null);
   const [isPrinting, setIsPrinting] = useState(false);
 

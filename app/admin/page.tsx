@@ -9,7 +9,6 @@ import { useState } from 'react';
 
 export default function AdminDashboard() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
 
   return (
     <AdminLayout>
@@ -34,7 +33,6 @@ export default function AdminDashboard() {
           <div className="p-6">
             <OrdersTable 
               searchTerm={searchTerm} 
-              statusFilter={statusFilter}
               showHistorical={false}
               showRefundButton={true}
             />
