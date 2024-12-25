@@ -19,25 +19,32 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
 
 interface MealDetail {
   id: string;
-  title: string;
   quantity: number;
-  available_quantity: number;
-  price: number;
-  time_available: string;
-  date_available: string;
+  time: string;
+  date: string;
 }
 
 async function updateMealQuantities(session: Stripe.Checkout.Session) {
   console.log('🚀 Starting to update meal quantities...');
   console.log('📦 Session metadata:', session.metadata);
   
-  if (!session.metadata?.meal_details) {
+  if (!session.metadata?.m) {
     console.error('❌ No meal details found in session metadata');
     return;
   }
 
   try {
-    const mealDetails: MealDetail[] = JSON.parse(session.metadata.meal_details);
+    // Parse the concise meal details format: "id:quantity:time:date|id:quantity:time:date"
+    const mealDetails: MealDetail[] = session.metadata.m.split('|').map(detail => {
+      const [id, quantity, time, date] = detail.split(':');
+      return {
+        id,
+        quantity: parseInt(quantity),
+        time,
+        date
+      };
+    });
+
     console.log('📋 Parsed meal details:', JSON.stringify(mealDetails, null, 2));
 
     for (const meal of mealDetails) {
@@ -46,7 +53,7 @@ async function updateMealQuantities(session: Stripe.Checkout.Session) {
         continue;
       }
 
-      console.log(`\n🔄 Processing meal: ID=${meal.id}, Title=${meal.title}, OrderQuantity=${meal.quantity}`);
+      console.log(`\n🔄 Processing meal: ID=${meal.id}, OrderQuantity=${meal.quantity}`);
 
       // Get current meal data to ensure we have the latest quantity
       console.log('🔍 Fetching current meal data...');
@@ -76,13 +83,6 @@ async function updateMealQuantities(session: Stripe.Checkout.Session) {
       // Update the meal quantity
       console.log(`🔄 Attempting to update meal ${meal.id} with new quantity: ${newQuantity}`);
       
-      // Log the Supabase client auth context
-      const { data: authData, error: authError } = await webhookClient.auth.getSession();
-      console.log('🔑 Supabase client auth context:', {
-        session: authData?.session ? 'Present' : 'None',
-        error: authError ? 'Error checking auth' : 'None'
-      });
-      
       const { data: updateData, error: updateError } = await webhookClient
         .from('meals')
         .update({ 
@@ -105,19 +105,6 @@ async function updateMealQuantities(session: Stripe.Checkout.Session) {
       }
 
       console.log(`✅ Successfully updated meal ${meal.id}:`, JSON.stringify(updateData, null, 2));
-      
-      // Verify the update
-      const { data: verifyData, error: verifyError } = await webhookClient
-        .from('meals')
-        .select('id, title, available_quantity')
-        .eq('id', meal.id)
-        .single();
-        
-      if (verifyError) {
-        console.error(`❌ Error verifying update for meal ${meal.id}:`, verifyError);
-      } else {
-        console.log(`✅ Verified update for meal ${meal.id}:`, JSON.stringify(verifyData, null, 2));
-      }
     }
   } catch (error) {
     console.error('❌ Error processing meal details:', error);
@@ -131,6 +118,9 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session) {
     
     // Convert time label to actual time
     const convertTimeLabel = (label: string): string => {
+      // If it's already in HH:MM:SS format, return as is
+      if (label.includes(':')) return label;
+      
       switch (label.toLowerCase()) {
         case 'lunch':
           return '12:00:00';
@@ -145,8 +135,16 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session) {
     await updateMealQuantities(session);
 
     // Create new order
-    if (session.metadata?.meal_details) {
-      const mealDetails: MealDetail[] = JSON.parse(session.metadata.meal_details);
+    if (session.metadata?.m) {
+      const mealDetails: MealDetail[] = session.metadata.m.split('|').map(detail => {
+        const [id, quantity, time, date] = detail.split(':');
+        return {
+          id,
+          quantity: parseInt(quantity),
+          time: convertTimeLabel(time),
+          date
+        };
+      });
       
       // First create the order
       const { data: orderData, error: orderError } = await webhookClient
@@ -157,7 +155,7 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session) {
           payment_status: 'paid',
           created_at: new Date().toISOString(),
           customer_email: session.customer_details?.email || '',
-          customer_phone: session.customer_details?.phone || '',
+          customer_phone: session.metadata?.p || '', // Get phone from metadata
           status: 'pending',
           session_id: session.id
         })
@@ -171,14 +169,25 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session) {
 
       console.log('Order created successfully:', orderData);
 
+      // Get line items to match with prices
+      const lineItems = await stripe.checkout.sessions.listLineItems(session.id);
+      
+      // Create a map of meal_id to price from line items
+      const priceMap = new Map(
+        lineItems.data.map(item => [
+          item.price?.metadata?.meal_id,
+          item.price?.unit_amount ? item.price.unit_amount / 100 : 0
+        ])
+      );
+
       // Then create order items
       const orderItems = mealDetails.map(meal => ({
         order_id: orderData.id,
         meal_id: meal.id,
         quantity: meal.quantity,
-        price: meal.price,
-        pickup_time: convertTimeLabel(meal.time_available),
-        pickup_date: meal.date_available,
+        price: priceMap.get(meal.id) || 0,
+        pickup_time: meal.time, // Already converted
+        pickup_date: meal.date,
         created_at: new Date().toISOString()
       }));
 

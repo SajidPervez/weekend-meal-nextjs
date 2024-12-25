@@ -1,7 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/lib/supabase';
+import PrintableOrders from './PrintableOrders';
+import { Printer } from 'lucide-react';
 
 interface Meal {
   id: string;
@@ -53,7 +55,7 @@ interface OrderResponse {
 const PAGE_SIZE = 10;
 
 interface OrdersTableSectionProps {
-  title: string;
+  title: ReactNode;
   orders: Order[];
   totalOrders: number;
   currentPage: number;
@@ -128,7 +130,7 @@ const OrdersTableSection = ({
                 handleSearch();
               }
             }}
-            placeholder={`Search ${title.toLowerCase()} by email or phone...`}
+            placeholder="Search by email or phone..."
             className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-emerald-500 focus:border-emerald-500"
           />
           <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
@@ -271,7 +273,7 @@ const OrdersTableSection = ({
         <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
           <div>
             <p className="text-sm text-gray-700">
-              {title} - Page <span className="font-medium">{currentPage}</span> of{' '}
+              Showing <span className="font-medium">{currentPage}</span> of{' '}
               <span className="font-medium">{totalPages}</span>
             </p>
           </div>
@@ -340,6 +342,20 @@ export default function OrdersTable() {
   const [historyOrdersSearch, setHistoryOrdersSearch] = useState('');
   const [appliedNewOrdersSearch, setAppliedNewOrdersSearch] = useState('');
   const [appliedHistoryOrdersSearch, setAppliedHistoryOrdersSearch] = useState('');
+  const [isPrinting, setIsPrinting] = useState(false);
+
+  const handlePrint = () => {
+    if (newOrders && newOrders.length > 0) {
+      console.log('Printing orders:', newOrders);
+      setIsPrinting(true);
+    } else {
+      console.error('No orders available to print');
+    }
+  };
+
+  const handlePrintComplete = () => {
+    setIsPrinting(false);
+  };
 
   const updateOrderStatus = async (orderId: number, newStatus: string) => {
     try {
@@ -438,16 +454,20 @@ export default function OrdersTable() {
       const { count: historyCount } = await historyOrdersQuery;
       setTotalHistoryOrders(historyCount || 0);
 
-      // Fetch paginated new orders with search
+      // Fetch paginated new orders with search and include all order item details
       let newOrdersDataQuery = supabase
         .from('orders')
         .select(`
           *,
           order_items:order_items (
             id,
+            order_id,
+            meal_id,
+            quantity,
+            price,
             pickup_date,
             pickup_time,
-            meal_id
+            created_at
           )
         `)
         .in('status', ['pending', 'processing'])
@@ -551,41 +571,58 @@ export default function OrdersTable() {
   }
 
   return (
-    <div>
-      {/* Revenue Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Recent Revenue (7 days)</h3>
-          <p className="text-3xl font-bold text-emerald-600">${recentRevenue.toFixed(2)}</p>
-        </div>
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Monthly Revenue (30 days)</h3>
-          <p className="text-3xl font-bold text-emerald-600">${monthlyRevenue.toFixed(2)}</p>
-        </div>
-      </div>
-
-      {/* New Orders */}
-      <div className="mb-12">
-        <OrdersTableSection
-          title="New Orders"
+    <div className="space-y-8">
+      {isPrinting && (
+        <PrintableOrders
           orders={newOrders}
-          totalOrders={totalNewOrders}
-          currentPage={newOrdersPage}
-          setCurrentPage={setNewOrdersPage}
-          searchTerm={newOrdersSearch}
-          setSearchTerm={setNewOrdersSearch}
-          setAppliedSearchTerm={setAppliedNewOrdersSearch}
-          isProcessing={isProcessing}
-          updateOrderStatus={updateOrderStatus}
-          handleRefund={handleRefund}
-          showRefundButton={true}
+          onPrintComplete={handlePrintComplete}
         />
+      )}
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Revenue Cards */}
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">Recent Revenue</h3>
+          <p className="text-3xl font-bold text-emerald-600">${recentRevenue.toFixed(2)}</p>
+          <p className="text-sm text-gray-500">Last 7 days</p>
+        </div>
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">Monthly Revenue</h3>
+          <p className="text-3xl font-bold text-emerald-600">${monthlyRevenue.toFixed(2)}</p>
+          <p className="text-sm text-gray-500">Current month</p>
+        </div>
       </div>
 
+      {/* New Orders Section */}
+      <OrdersTableSection
+        title={
+          <div className="flex justify-between items-center">
+            <span>New Orders</span>
+            <button
+              onClick={handlePrint}
+              className="flex items-center gap-2 px-4 py-2 text-sm bg-emerald-600 text-white rounded-md hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
+            >
+              <Printer className="w-4 h-4" />
+              Print Orders
+            </button>
+          </div>
+        }
+        orders={newOrders}
+        totalOrders={totalNewOrders}
+        currentPage={newOrdersPage}
+        setCurrentPage={setNewOrdersPage}
+        searchTerm={newOrdersSearch}
+        setSearchTerm={setNewOrdersSearch}
+        setAppliedSearchTerm={setAppliedNewOrdersSearch}
+        isProcessing={isProcessing}
+        updateOrderStatus={updateOrderStatus}
+        handleRefund={handleRefund}
+        showRefundButton={true}
+      />
       {/* Order History */}
       <div>
         <OrdersTableSection
-          title="Order History"
+          title={<span>Order History</span>}
           orders={historyOrders}
           totalOrders={totalHistoryOrders}
           currentPage={historyOrdersPage}

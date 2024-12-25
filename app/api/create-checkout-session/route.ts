@@ -50,30 +50,12 @@ export async function POST(req: Request) {
     console.log('Success URL length:', successUrl.length);
     console.log('Cancel URL length:', cancelUrl.length);
 
-    // Convert time label to actual time
-    const convertTimeLabel = (label: string): string => {
-      switch (label.toLowerCase()) {
-        case 'lunch':
-          return '12:00:00';
-        case 'dinner':
-          return '18:00:00';
-        default:
-          return label;
-      }
-    };
+    // Store minimal meal details in metadata for the webhook
+    const mealDetails = items.map(item => 
+      `${item.meal.id}:${item.quantity}:${item.meal.time_available}:${item.meal.date_available}`
+    ).join('|');
 
-    // Store meal details in metadata for the webhook
-    const mealDetails = items.map(item => ({
-      id: item.meal.id,
-      title: item.meal.title,
-      quantity: item.quantity,
-      available_quantity: item.meal.available_quantity,
-      price: item.meal.price,
-      time_available: convertTimeLabel(item.meal.time_available),
-      date_available: item.meal.date_available
-    }));
-
-    console.log('Creating checkout session with meals:', JSON.stringify(mealDetails, null, 2));
+    console.log('Creating checkout session with meals:', mealDetails);
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -84,8 +66,7 @@ export async function POST(req: Request) {
             name: item.meal.title,
             description: item.meal.description,
             metadata: {
-              meal_id: item.meal.id,
-              original_quantity: item.meal.available_quantity
+              meal_id: item.meal.id
             }
           },
           unit_amount: Math.round(item.meal.price * 100), // Convert to cents
@@ -97,8 +78,8 @@ export async function POST(req: Request) {
       cancel_url: cancelUrl,
       customer_email: customerEmail,
       metadata: {
-        customerPhone: customerPhone,
-        meal_details: JSON.stringify(mealDetails)
+        p: customerPhone,
+        m: mealDetails
       },
       shipping_address_collection: {
         allowed_countries: ['US', 'CA'],

@@ -43,7 +43,7 @@ export default function BookingForm({ meal }: BookingFormProps) {
 
   if (showSuccess) {
     return (
-      <div className="container mx-auto p-4">
+      <div className="container mx-auto p-4 pb-32 sm:pb-4">
         <div className="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md">
           <h2 className="text-2xl font-bold text-emerald-600 mb-4">Added to Cart!</h2>
           <div className="space-y-4">
@@ -73,7 +73,7 @@ export default function BookingForm({ meal }: BookingFormProps) {
   }
 
   return (
-    <div className="container mx-auto p-4">
+    <div className="container mx-auto p-4 pb-24 sm:pb-4">
       <div className="mb-6">
         <Link 
           href="/" 
