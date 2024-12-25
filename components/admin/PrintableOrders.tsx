@@ -174,7 +174,7 @@ export default function PrintableOrders({ orders, onClose }: PrintableOrdersProp
               <tbody>
                 {group.orders.map((order) => (
                   <tr key={order.id} className="order-item">
-                    <td>{order.id.slice(-8)}</td>
+                    <td>{order.id.toString().slice(-8)}</td>
                     <td>
                       {order.customer_email}
                       {order.customer_phone && <div className="text-sm text-gray-500">{order.customer_phone}</div>}
