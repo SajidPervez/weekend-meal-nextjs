@@ -61,7 +61,7 @@ export default function PopularMealsChart() {
   const [chartData, setChartData] = useState<ChartData>({
     labels: [],
     datasets: [{
-      label: 'Orders',
+      label: 'Orders completed',
       data: [],
       backgroundColor: '',
       borderColor: '',

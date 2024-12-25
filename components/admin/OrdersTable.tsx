@@ -261,7 +261,9 @@ export default function OrdersTable({
               <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Pickup</th>
               <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Amount</th>
               <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Status</th>
-              <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Actions</th>
+              {!showHistorical && showRefundButton && (
+                <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Actions</th>
+              )}
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200 bg-white">
@@ -301,35 +303,37 @@ export default function OrdersTable({
                     {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
                   </span>
                 </td>
-                <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                  <select
-                    value={order.status}
-                    onChange={(e) => updateOrderStatus(order.id, e.target.value)}
-                    disabled={isProcessing === order.id}
-                    className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm"
-                  >
-                    <option value="pending">Pending</option>
-                    <option value="processing">Processing</option>
-                    <option value="completed">Completed</option>
-                    <option value="cancelled">Cancelled</option>
-                  </select>
-                  {showRefundButton && order.session_id && order.payment_status === 'paid' && order.status !== 'cancelled' && order.status !== 'completed' && (
-                    <button
-                      onClick={() => handleRefund(order.id)}
+                {!showHistorical && showRefundButton && (
+                  <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                    <select
+                      value={order.status}
+                      onChange={(e) => updateOrderStatus(order.id, e.target.value)}
                       disabled={isProcessing === order.id}
-                      className="mt-2 w-full inline-flex justify-center items-center px-3 py-2 border border-red-300 text-sm leading-4 font-medium rounded-md text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm"
                     >
-                      {isProcessing === order.id ? (
-                        <>
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-500 mr-2"></div>
-                          Processing...
-                        </>
-                      ) : (
-                        'Cancel & Refund'
-                      )}
-                    </button>
-                  )}
-                </td>
+                      <option value="pending">Pending</option>
+                      <option value="processing">Processing</option>
+                      <option value="completed">Completed</option>
+                      <option value="cancelled">Cancelled</option>
+                    </select>
+                    {showRefundButton && order.session_id && order.payment_status === 'paid' && order.status !== 'cancelled' && order.status !== 'completed' && (
+                      <button
+                        onClick={() => handleRefund(order.id)}
+                        disabled={isProcessing === order.id}
+                        className="mt-2 w-full inline-flex justify-center items-center px-3 py-2 border border-red-300 text-sm leading-4 font-medium rounded-md text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isProcessing === order.id ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-500 mr-2"></div>
+                            Processing...
+                          </>
+                        ) : (
+                          'Cancel & Refund'
+                        )}
+                      </button>
+                    )}
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>
