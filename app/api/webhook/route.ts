@@ -116,112 +116,75 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session) {
   try {
     console.log('Processing checkout session:', session.id);
     
-    // Convert time label to actual time
-    const convertTimeLabel = (label: string): string => {
-      // If it's already in HH:MM:SS format, return as is
-      if (label.includes(':')) return label;
-      
-      switch (label.toLowerCase()) {
-        case 'lunch':
-          return '12:00:00';
-        case 'dinner':
-          return '18:00:00';
-        default:
-          return label;
-      }
-    };
-    
-    // Update meal quantities
-    await updateMealQuantities(session);
+    // First check if order already exists
+    const { data: existingOrder, error: checkError } = await webhookClient
+      .from('orders')
+      .select('id')
+      .eq('session_id', session.id)
+      .single();
 
-    // Create new order
-    if (session.metadata?.m) {
-      const mealDetails: MealDetail[] = session.metadata.m.split('|').map(detail => {
-        const [id, quantity, time, date] = detail.split(':');
-        return {
-          id,
-          quantity: parseInt(quantity),
-          time: convertTimeLabel(time),
-          date
-        };
-      });
-      
-      // First create the order
-      const { data: orderData, error: orderError } = await webhookClient
-        .from('orders')
-        .insert({
-          user_id: null, // Will be null for guest checkouts
-          total_amount: session.amount_total ? session.amount_total / 100 : 0,
-          payment_status: 'paid',
-          created_at: new Date().toISOString(),
-          customer_email: session.customer_details?.email || '',
-          customer_phone: session.metadata?.p || '', // Get phone from metadata
-          status: 'pending',
-          session_id: session.id
-        })
-        .select()
-        .single();
-
-      if (orderError) {
-        console.error('Failed to create order:', orderError);
-        throw orderError;
-      }
-
-      console.log('Order created successfully:', orderData);
-
-      // Get line items to match with prices
-      const lineItems = await stripe.checkout.sessions.listLineItems(session.id);
-      
-      // Create a map of meal_id to price from line items
-      const priceMap = new Map(
-        lineItems.data.map(item => [
-          item.price?.metadata?.meal_id,
-          item.price?.unit_amount ? item.price.unit_amount / 100 : 0
-        ])
-      );
-
-      // Then create order items
-      const orderItems = mealDetails.map(meal => ({
-        order_id: orderData.id,
-        meal_id: meal.id,
-        quantity: meal.quantity,
-        price: priceMap.get(meal.id) || 0,
-        pickup_time: meal.time, // Already converted
-        pickup_date: meal.date,
-        created_at: new Date().toISOString()
-      }));
-
-      console.log('Order items to be created:', JSON.stringify(orderItems, null, 2));
-
-      const { data: orderItemsData, error: itemsError } = await webhookClient
-        .from('order_items')
-        .insert(orderItems)
-        .select();
-
-      if (itemsError) {
-        console.error('Failed to create order items:', itemsError);
-        console.error('Full error:', JSON.stringify(itemsError, null, 2));
-        throw itemsError;
-      }
-
-      console.log('Order items created successfully:', JSON.stringify(orderItemsData, null, 2));
+    if (existingOrder) {
+      console.log('Order already exists for session:', session.id);
+      return; // Skip processing if order exists
     }
+
+    if (!session.metadata?.m) {
+      console.error('No meal details found in session metadata');
+      throw new Error('Missing meal details in session metadata');
+    }
+
+    // Parse meal details first
+    const mealDetails = session.metadata.m.split('|').map(detail => {
+      const [id, quantity, time, date] = detail.split(':');
+      return {
+        id,
+        quantity: parseInt(quantity),
+        time: convertTimeLabel(time),
+        date
+      };
+    });
+
+    // Get line items for prices
+    const lineItems = await stripe.checkout.sessions.listLineItems(session.id);
+    const priceMap = new Map(
+      lineItems.data.map(item => [
+        item.price?.metadata?.meal_id,
+        item.price?.unit_amount ? item.price.unit_amount / 100 : 0
+      ])
+    );
+
+    // Start a Supabase transaction
+    const { data: orderData, error: orderError } = await webhookClient
+      .rpc('create_order_with_items', {
+        p_session_id: session.id,
+        p_user_id: null,
+        p_total_amount: session.amount_total ? session.amount_total / 100 : 0,
+        p_customer_email: session.customer_details?.email || '',
+        p_customer_phone: session.metadata?.p || '',
+        p_meal_details: JSON.stringify(mealDetails.map(meal => ({
+          ...meal,
+          price: priceMap.get(meal.id) || 0
+        })))
+      });
+
+    if (orderError) {
+      console.error('Failed to create order:', orderError);
+      throw orderError;
+    }
+
+    console.log('Order and items created successfully:', orderData);
 
     // Send confirmation email
     if (session.customer_details?.email) {
       try {
-        const expandedSession = await stripe.checkout.sessions.retrieve(session.id, {
-          expand: ['line_items.data']
-        });
-
         await sendReceiptEmail(session.customer_details.email, {
           sessionId: session.id,
           amount: session.amount_total || 0,
-          items: expandedSession.line_items?.data.map(item => ({
+          items: lineItems.data.map(item => ({
             name: item.description || 'Product',
             quantity: item.quantity || 1,
             price: (item.amount_total || 0) / 100
-          })) || []
+          }))
         });
         console.log('Receipt email sent successfully');
       } catch (emailError) {
@@ -231,6 +194,15 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session) {
   } catch (error) {
     console.error('Error in handleCheckoutComplete:', error);
     throw error;
+  }
+}
+
+function convertTimeLabel(label: string): string {
+  if (label.includes(':')) return label;
+  switch (label.toLowerCase()) {
+    case 'lunch': return '12:00:00';
+    case 'dinner': return '18:00:00';
+    default: return label;
   }
 }
 
