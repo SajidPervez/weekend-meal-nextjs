@@ -14,12 +14,6 @@ ChartJS.register(
   Legend
 );
 
-interface MealData {
-  id: number;
-  title: string;
-  count: number;
-}
-
 interface ChartData {
   labels: string[];
   datasets: {

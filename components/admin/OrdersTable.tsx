@@ -5,11 +5,6 @@ import { supabase } from '@/lib/supabase';
 import { Printer } from 'lucide-react';
 import PrintableOrders from './PrintableOrders';
 
-interface Meal {
-  id: number;
-  title: string;
-}
-
 interface OrderItem {
   id: number;
   order_id: number;
